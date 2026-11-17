@@ -41,7 +41,7 @@ fi
 echo "share mounted at $MOUNT: $(ls "$MOUNT" | wc -l) top-level folders"
 
 mkdir -p "$FB"
-install -m 755 "$HERE/jukebox_library.py" "$HERE/playlist_library.py" "$HERE/update-jukebox.sh" "$HERE/strip_titles.py" "$FB/"
+install -m 755 "$HERE/music_tags.py" "$HERE/playlist_library.py" "$HERE/update-jukebox.sh" "$HERE/strip_titles.py" "$FB/"
 
 # Nightly at 3:30, and 2 minutes after each boot.  Every 4 minutes, list the
 # share so Windows doesn't drop the idle connection (it does after 15 min);

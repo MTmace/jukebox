@@ -2,15 +2,16 @@
 """Jukebox bass knob.
 
 Listens to the macro pad's bass knob and turns the bass up or down on the
-"Jukebox Bass" sound output (see jukebox-bass.conf). The level is saved, so
-it comes back after a reboot.
+"Jukebox Bass" sound output (see jukebox-bass.conf). It starts at the
+default (+10 dB) every time; the current level is written to SAVE_FILE and
+SHOW_FILE for the status page.
 
   knob right  -> F17 (or Home)  bass up   2 dB
   knob left   -> F18 (or End)   bass down 2 dB
   knob press  -> F19            bass back to the default (+10 dB)
 
-None of these keys are used by Fruitbox, the cabinet lights or the screen
-sleep key. Fruitbox simply ignores them.
+None of these keys are used by Fruitbox, the cabinet lights or the state
+manager. Fruitbox simply ignores them.
 
 Runs as the desktop user (systemd --user service jukebox-bass.service), so
 it can talk to PipeWire. Needs: python3-evdev, pipewire-bin (pw-cli, pw-dump)
@@ -18,7 +19,8 @@ and the user in the "input" group (the Pi's default user is).
 
 Test from SSH:  python3 /home/mtmace/fruitbox/jukebox-bass.py --set 6
 """
-VERSION = "1.1"   # bump on every change; the status page shows it
+VERSION = "1.2"   # bump on every change; the status page shows it
+# 1.2: tidy only (unused load_level removed, comments brought up to date).
 
 import json, os, subprocess, sys, time
 
@@ -30,19 +32,11 @@ DEFAULT_DB = 10.0        # every start-up, and the knob press, go back to this
 MIN_DB, MAX_DB = -12.0, 12.0
 NODE_NAME  = "jukebox_bass"
 SAVE_FILE  = os.path.expanduser("~/.config/jukebox-bass/level")
-SHOW_FILE  = "/dev/shm/jukebox_bass.txt"     # for a skin or the lights, if wanted
+SHOW_FILE  = "/dev/shm/jukebox_bass.txt"     # read by the status page
 
 
 def log(*a):
     print(time.strftime("%H:%M:%S"), *a, flush=True)
-
-
-def load_level():
-    try:
-        with open(SAVE_FILE) as f:
-            return max(MIN_DB, min(MAX_DB, float(f.read().strip())))
-    except (OSError, ValueError):
-        return 0.0
 
 
 def save_level(db):

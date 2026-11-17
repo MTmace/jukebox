@@ -49,7 +49,7 @@ All of these go in `/home/mtmace/fruitbox` on the Pi (like `C:\Users\mtmace\frui
 |---|---|
 | `update-jukebox.sh` | The one you run by hand, and the one the nightly job runs. Runs `playlist_library.py`, then `strip_titles.py` if anything changed. Log: `library.log` |
 | `playlist_library.py` | Reads the playlists and builds `~/JukeboxGroups` and the ini's MusicPath lines |
-| `jukebox_library.py` | Tag reading and duplicate rules that `playlist_library.py` uses. Tags are cached in `/home/mtmace/.cache/playlist_tags.json`, so only new or changed files are read over the network |
+| `music_tags.py` | Tag reading and duplicate rules that `playlist_library.py` uses. Tags are cached in `/home/mtmace/.cache/playlist_tags.json`, so only new or changed files are read over the network |
 | `strip_titles.py` | Writes Fruitbox's song list with shortened titles for the title strips |
 | `setup-share.sh` | One-time setup: mounts the share, installs these files, adds the nightly job |
 

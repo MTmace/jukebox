@@ -37,7 +37,7 @@ and the like) from different albums is kept only once. The best version
 wins (studio album > single > greatest hits > live) and it goes into every
 playlist any of the versions was in. The skipped versions are listed in
 --dup-report. Turn this off with --keep-duplicates. Tags are read with
-jukebox_library.py's code and cached in --tag-cache, so re-runs are quick.
+music_tags.py and cached in --tag-cache, so re-runs are quick.
 
 It then rewrites the MusicPath lines (in playlist order) and the All Songs
 label in fruitbox.ini. Run strip_titles.py on DEST afterwards.
@@ -58,7 +58,7 @@ import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from jukebox_library import read_tags, song_key, version_kind, KIND_NAMES  # noqa: E402
+from music_tags import read_tags, song_key, version_kind, KIND_NAMES  # noqa: E402
 
 MEDIA_EXT = {".mp3", ".flac", ".ogg", ".oga", ".wav", ".m4a", ".mp4", ".aac", ".opus",
              ".wma", ".aif", ".aiff", ".ape", ".wv", ".mpc", ".mpg", ".mpeg", ".avi",

@@ -18,7 +18,7 @@ select_hint.txt, select_ghost.txt, art_blank.png, spectrum bar and colours.
 """
 import os
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 
 W, H = 2560, 720                   # status screen skin size (32:9 bar panel)
 DISPLAY = 2

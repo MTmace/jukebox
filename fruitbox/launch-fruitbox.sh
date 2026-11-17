@@ -10,7 +10,7 @@ FB_HOME="$HOME/fruitbox"
 INI="$FB_HOME/fruitbox.ini"
 LOG="$FB_HOME/fruitbox.log"
 SKIN="/opt/fruitbox/skins/Firestar Ultrawide/fruitbox.cfg"   # "" = show the skin chooser instead
-WAIT_FOR="$HOME/JukeboxGenres" # folder that must exist first (USB music drive mount)
+WAIT_FOR="$HOME/JukeboxGroups"  # folder that must exist first (the playlist categories)
 
 APP_DIR="/opt/fruitbox"
 export GST_PLUGIN_PATH="$APP_DIR/lib/gstreamer-1.0${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
@@ -21,7 +21,7 @@ for _ in $(seq 30); do [ -d "$WAIT_FOR" ] && break; sleep 1; done
 
 # Fruitbox stops with "Can't find path" if any MusicPath folder is missing
 # (e.g. a genre that lost its last song). Drop those lines from the ini first.
-python3 - "$INI" "$HOME/JukeboxLibrary" <<'PY' >> "$FB_HOME/launcher.log" 2>&1
+python3 - "$INI" "$HOME/JukeboxGroups" <<'PY' >> "$FB_HOME/launcher.log" 2>&1
 import os, re, sys, time
 ini, fallback = sys.argv[1], sys.argv[2]
 try:

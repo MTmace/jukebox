@@ -343,7 +343,7 @@ def system():
 
 def music():
     d = {"share_mounted": os.path.ismount(MUSIC_MOUNT)}
-    for name in ("JukeboxGroups", "JukeboxGenres"):
+    for name in ("JukeboxGroups",):
         p = os.path.join(HOME, name)
         if os.path.isdir(p):
             try:

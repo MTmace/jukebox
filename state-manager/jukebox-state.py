@@ -31,18 +31,8 @@ key can't restart the jukebox or put it to sleep):
     F20 Reboot   F21 Rebuild Playlist (update-jukebox.sh, then reboot)
     F22 Shut Down   Pause Sleep
 
-And the playlist keys (PARKED since 1.5: PLAYLIST_KEYS is empty, keys 1-3 do
-nothing; see the note there). When on, pad keys 1 / 2 / 3 (Keypad 1 / 2 / 3) jump
-Fruitbox straight to that playlist group (All Songs / Oldies / Christmas).
-Fruitbox can only step to the NEXT group (Right Alt), so it presses Right Alt
-and reads the group Fruitbox now shows (GROUP= in /dev/shm/jukebox_fruitbox.txt,
-written by the status page's hidden skin box) until it is the one wanted. If it
-can't read the group, or Fruitbox stops changing it, or the playlist isn't
-there, it stops and logs why: never more than one trip round the groups.
-
-Replaces jukebox-keys.py and screen-sleep.sh. The cabinet lights (jukebox-lights)
-and the status page read /dev/shm/jukebox_mode; the old /dev/shm/jukebox_sleep
-is no longer made (any left over is removed). It tells the keypad Teensy "S" /
+The cabinet lights (jukebox-lights) and the status page read
+/dev/shm/jukebox_mode. It tells the keypad Teensy "S" /
 "A" on sleep / wake, so the waking press isn't used as a digit.
 
 Runs as root (systemd service jukebox-state) so it can reboot, power off and
@@ -50,9 +40,10 @@ hold the keyboards while asleep.
 Log: /home/mtmace/fruitbox/jukebox-state.log  (and journalctl -u jukebox-state -f)
 Test without the Pi:  python3 jukebox-state.py --selftest
 """
-VERSION = "1.5"   # bump on every change; the status page shows it
+VERSION = "1.6"   # bump on every change; the status page shows it
+# 1.6: parked playlist-key code and the old jukebox_sleep clean-up removed (no behaviour change).
 
-import glob, os, re, subprocess, sys, threading, time
+import glob, os, subprocess, sys, threading, time
 from select import select
 
 # ---- settings ---------------------------------------------------------------
@@ -74,7 +65,6 @@ FRUITBOX = "/home/mtmace/fruitbox"
 UPDATE = FRUITBOX + "/update-jukebox.sh"
 LOG = FRUITBOX + "/jukebox-state.log"
 MODE_FILE = "/dev/shm/jukebox_mode"       # the state, one word (read by everything else)
-OLD_SLEEP_FILE = "/dev/shm/jukebox_sleep" # made by the old jukebox-keys / screen-sleep.sh; removed if found
 FRUITBOX_FILE = "/dev/shm/jukebox_state.txt"  # written by the skin: PLAYING/IDLE, ATTRACT_SONG, ATTRACT_ON
 VIRTUAL_NAME = "jukebox-state keys"       # our own virtual keyboard, for keys we send Fruitbox
 
@@ -95,7 +85,6 @@ KNOB_TURNS = {"KEY_EQUAL", "KEY_MINUS",            # knob 1 volume
 FB_ATTRACT = "KEY_APOSTROPHE"             # AttractMode toggle
 FB_CLEAR_QUEUE = "KEY_DELETE"             # ClearQueue
 FB_SKIP = "KEY_BACKSPACE"                 # Skip: ends the song playing now
-FB_GROUP = "KEY_RIGHTALT"                 # MusicGroup: next playlist group
 FB_VOL_UP = "KEY_EQUAL"                   # VolUp
 FB_VOL_DOWN = "KEY_MINUS"                 # VolDown
 MAX_VOLUME = 100                          # fruitbox.ini MaxVolume
@@ -120,16 +109,7 @@ WEB_REQUESTS = {"wake": "Wake up",
                 "shutdown": "Shut down"}
 WEB_CONFIRM = ("sleep", "reboot", "rebuild", "shutdown")   # the page asks "are you sure?" first
 
-# Playlist keys: key -> the start of the playlist group's name (case ignored,
-# the song count Fruitbox shows after it, e.g. "Oldies - Rock & Roll (412)", too)
-# PARKED 2026-11-17: Fruitbox takes ~23 s per group change (its own
-# drawing, any skin), so stepping to a playlist isn't practical. Keys 1-3 do
-# nothing until a better option exists. To bring them back:
-#   {"KEY_KP1": "All Songs", "KEY_KP2": "Oldies", "KEY_KP3": "Christmas"}
-PLAYLIST_KEYS = {}
-GROUP_FILE = "/dev/shm/jukebox_fruitbox.txt"  # status page skin box: GROUP=<playlist shown now>
-GROUP_WAIT = 3.0                          # Fruitbox writes that file once a second
-MAX_GROUPS = 30                           # Fruitbox's own limit
+FRUITBOX_FILE = "/dev/shm/jukebox_fruitbox.txt"  # status page skin box: VOLUME=<Fruitbox volume>, ...
 
 
 def log(*a):
@@ -276,7 +256,6 @@ class RealIO:
         return screens_are_on()
 
     def mark_asleep(self, on):
-        remove(OLD_SLEEP_FILE)      # no longer used; clear any left by the old scripts
         teensy("S" if on else "A")
 
     def write_mode(self, state):
@@ -399,95 +378,17 @@ def read_fruitbox():
     return True, playing and not attract_song, attract_on
 
 
-# ---- playlist keys ----------------------------------------------------------------
+# ---- Fruitbox's volume -----------------------------------------------------------
 def read_volume():
     """Fruitbox's volume now (VOLUME= in the status box file), or None."""
     try:
-        with open(GROUP_FILE, encoding="utf-8", errors="ignore") as f:
+        with open(FRUITBOX_FILE, encoding="utf-8", errors="ignore") as f:
             for line in f:
                 if line.startswith("VOLUME="):
                     return int(line[7:].strip())
     except (OSError, ValueError):
         pass
     return None
-
-
-def read_group():
-    """The playlist group Fruitbox shows now, or None if the status box file isn't there."""
-    try:
-        with open(GROUP_FILE, encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                if line.startswith("GROUP="):
-                    return line[6:].strip()
-    except OSError:
-        pass
-    return None
-
-
-def group_matches(group, want):
-    name = re.sub(r"\s*\(\d+\)\s*$", "", group or "").strip().lower()
-    return bool(name) and name.startswith(want.strip().lower())
-
-
-def jump_to_group(want, press, read=read_group, wait=GROUP_WAIT,
-                  clock=time.monotonic, nap=time.sleep):
-    """Press Next Group until Fruitbox shows a group starting with want.
-    want() gives the wanted name each step (a newer key press changes it).
-    Returns a sentence for the log."""
-    target = want()
-    group = read()
-    if group is None:
-        return "can't see the playlist Fruitbox shows (%s missing: status page not installed?)" % GROUP_FILE
-    seen = {group}
-    for _ in range(MAX_GROUPS + 1):
-        if want() != target:                     # another playlist key pressed meanwhile
-            target, seen = want(), {group}
-        if group_matches(group, target):
-            return "playlist %r: Fruitbox shows %r" % (target, group)
-        press(FB_GROUP)
-        end = clock() + wait
-        new = read()
-        while new == group and clock() < end:
-            nap(0.1)
-            new = read()
-        if new == group or new is None:
-            return "stopped: Fruitbox didn't change playlist from %r after Next Group" % group
-        group = new
-        if group in seen and not group_matches(group, want()):
-            return "no playlist starting %r in Fruitbox's groups; left on %r" % (target, group)
-        seen.add(group)
-    return "gave up looking for %r after %d groups" % (target, MAX_GROUPS)
-
-
-class PlaylistKeys:
-    """Runs one jump at a time in the background; a new key press re-aims it."""
-    def __init__(self, fbkeys):
-        self.fbkeys = fbkeys
-        self.want = None
-        self.lock = threading.Lock()
-        self.running = False
-
-    def pressed(self, key_name):
-        with self.lock:
-            self.want = PLAYLIST_KEYS[key_name]
-            if self.running:
-                log("playlist key", key_name, "-> now going to", repr(self.want))
-                return
-            self.running = True
-        log("playlist key", key_name, "->", repr(self.want))
-        threading.Thread(target=self._run, daemon=True).start()
-
-    def _run(self):
-        try:
-            if not self.fbkeys or not self.fbkeys.ui:
-                log("playlist key: no virtual keyboard, can't change playlist")
-                return
-            log(jump_to_group(lambda: self.want, self.fbkeys.press))
-        except Exception as e:                   # never take the state manager down
-            log("playlist key failed:", e)
-        finally:
-            with self.lock:
-                self.running = False
 
 
 class FruitboxKeys:
@@ -498,7 +399,7 @@ class FruitboxKeys:
             import evdev
             from evdev import ecodes
             self.ecodes = ecodes
-            keys = [ecodes.ecodes[k] for k in (FB_ATTRACT, FB_CLEAR_QUEUE, FB_SKIP, FB_GROUP,
+            keys = [ecodes.ecodes[k] for k in (FB_ATTRACT, FB_CLEAR_QUEUE, FB_SKIP,
                                                 FB_VOL_UP, FB_VOL_DOWN)]
             self.ui = evdev.UInput({ecodes.EV_KEY: keys}, name=VIRTUAL_NAME)
         except Exception as e:                      # no uinput: sleep still works, music keeps going
@@ -771,10 +672,8 @@ def run(evdev, ecodes):
         service[ecodes.ecodes[name]] = what
     fbkeys = FruitboxKeys()
     mgr = Manager(RealIO(fbkeys))
-    playlists = PlaylistKeys(fbkeys)
     remove(REQUEST_FILE)           # never act on a request left from before a restart
-    log("version", VERSION, "watching for", ", ".join(f"{n} = {w[0]}" for n, w in SERVICE_KEYS.items()),
-        "and playlist keys", ", ".join(f"{n} = {w}" for n, w in PLAYLIST_KEYS.items()))
+    log("version", VERSION, "watching for", ", ".join(f"{n} = {w[0]}" for n, w in SERVICE_KEYS.items()))
 
     first = {}                     # code -> time of the first press
     devices, last_scan = {}, 0
@@ -841,9 +740,6 @@ def run(evdev, ecodes):
                     grab_all(mgr.asleep)
                     continue
                 mgr.touch(name)
-                if name in PLAYLIST_KEYS:
-                    playlists.pressed(name)
-                    continue
                 if e.code not in service:
                     continue
                 label, action = service[e.code]
@@ -1006,35 +902,6 @@ def selftest():
             FRUITBOX_NAME = real_name
             p.kill()
             p.wait()
-
-    # playlist keys: a fake Fruitbox that steps through its groups on Next Group
-    def fake_fb(groups, start=0, stuck=False):
-        st = {"i": start, "presses": 0, "t": 0.0}
-        def press(k):
-            st["presses"] += 1
-            if not stuck:
-                st["i"] = (st["i"] + 1) % len(groups)
-        def nap(s):
-            st["t"] += s
-        return st, press, (lambda: groups[st["i"]]), (lambda: st["t"]), nap
-    groups = ["All Songs (1830)", "Country (412)", "Oldies - Rock & Roll (412)",
-              "Everything Else (900)", "Christian (60)", "Christmas (117)"]
-    for what, want, start, presses, word in (
-            ("playlist: All -> Christmas", "Christmas", 0, 5, "Fruitbox shows 'Christmas"),
-            ("playlist: Christmas -> All", "All Songs", 5, 1, "Fruitbox shows 'All Songs"),
-            ("playlist: Oldies wraps round", "Oldies", 4, 4, "Fruitbox shows 'Oldies"),
-            ("playlist: already there", "Oldies", 2, 0, "Fruitbox shows 'Oldies"),
-            ("playlist: missing one stops", "Jazz", 1, 6, "no playlist")):
-        st, press, read, clk, nap = fake_fb(groups, start)
-        msg = jump_to_group(lambda: want, press, read, 3.0, clk, nap)
-        good = st["presses"] == presses and word in msg
-        checks.append((what, good, "%d presses: %s" % (st["presses"], msg), "%d presses, %s" % (presses, word)))
-    st, press, read, clk, nap = fake_fb(groups, 0, stuck=True)
-    msg = jump_to_group(lambda: "Christmas", press, read, 3.0, clk, nap)
-    checks.append(("playlist: Fruitbox not changing stops", st["presses"] == 1 and "didn't change" in msg,
-                   "%d presses: %s" % (st["presses"], msg), "1 press, didn't change"))
-    msg = jump_to_group(lambda: "Christmas", press, lambda: None, 3.0, clk, nap)
-    checks.append(("playlist: no status file does nothing", "can't see" in msg, msg, "can't see"))
 
     # status page requests
     rq = os.path.join(tmp, "request")
