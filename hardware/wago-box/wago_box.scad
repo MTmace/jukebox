@@ -24,7 +24,7 @@
 //                      their guides before the full print
 // Render (F6) and export STL. Print flat side down, no supports.
 //
-// Connector size: Andrew's 221-412s measure 12.9 x 17.9 mm (W x D). Side walls
+// Connector size: The 221-412s measure 12.9 x 17.9 mm (W x D). Side walls
 // run the full depth of each connector.
 
 part = "both";            // "base", "lid", "fittest", "pockettest", "snaptest" or "both"

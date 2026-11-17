@@ -27,7 +27,7 @@ TEST_L    = 80;                       // test piece length
 TEST_HOLES = [11.8, 12.0, 12.2, 12.4]; // hole sizes to try
 TEST_LABELS = ["11.8", "12.0", "12.2", "12.4"];
 
-HOLE      = 12.0;    // hole size that fit best (Andrew, 2026-10-09)
+HOLE      = 12.0;    // hole size that fit best (2026-10-09)
 PITCH     = 15.6;    // centre to centre: one 13.8 mm cell + one 1.8 mm wall (19.05 was too far apart)
 
 // Thinner ring around each hole, cut from the back so the front stays flat,
@@ -123,14 +123,14 @@ module clip_panel(l, holes) {
   }
 }
 
-// "hug" version (Andrew, 2026-10-09): the plate sits right against the back of
+// "hug" version (2026-10-09): the plate sits right against the back of
 // the inner housing (26.5 mm tall, 1.8 mm walls, holes 13.8 mm inside) and its
 // two long walls reach FORWARD over the housing's top and bottom (3.7 mm deep), so the bulbs
 // sit right behind the holes. The thin ring is cut from the front, so it prints
 // back face down with the walls pointing up and no supports.
 INNER_H   = 26.5;    // inner housing height, outside top to outside bottom
 FIT       = 0.3;     // extra gap so it slides on
-HOUSING_D = 3.7;     // how far the housing sticks back (Andrew, 2026-10-10)
+HOUSING_D = 3.7;     // how far the housing sticks back (2026-10-10)
 CATCH     = HOUSING_D + 0.1;   // ridge starts just past the housing edge
 HUG_RIDGE = 0.6;     // snap ridge on the inside of each wall tip
 HUG_D     = CATCH + 1.4;       // wall reach: ends just past the ridge
@@ -162,16 +162,16 @@ module hug_panel(l, holes, drill = -1) {   // drill: only the first this many ho
   }
 }
 
-// ---- Full panel (Andrew, 2026-10-10: the hug test fits perfectly) ----
-// One row of 20 holes (1 2, then 0-7, then 0-9; Andrew 2026-10-28: the tens only
+// ---- Full panel (2026-10-10: the hug test fits perfectly) ----
+// One row of 20 holes (1 2, then 0-7, then 0-9; 2026-10-28: the tens only
 // go to 7) at the test's spacing, on a
 // 14.5" panel, split in two halves for a Bambu P1S (256 mm bed). The halves
 // join with two dovetails that press together through the plate; the housing
 // they clip onto keeps them in line. The ends are open, so the panel can
 // slide along the housing to line the holes up.
 FULL_HOLES = 20;
-FULL_L     = 342.9;            // 13.5" (Andrew 2026-10-28: windows span 12.5", 0.5" spare each end)
-// Joint v3 (Andrew, 2026-10-28: "make the dove tails stronger"): wider neck,
+FULL_L     = 342.9;            // 13.5" (2026-10-28: windows span 12.5", 0.5" spare each end)
+// Joint v3 (2026-10-28: "make the dove tails stronger"): wider neck,
 // longer tails, longer and thicker splice bars. (v2: neck 3, len 7, splice 44 x 2.)
 DOVE_NECK  = 4.2;               // dovetail width at the joint
 DOVE_HEAD  = 5.6;              // dovetail width at its end (band is 5.9 mm)

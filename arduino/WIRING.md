@@ -25,7 +25,7 @@ Every switch here simply connects a pin to **GND**, which is always safe.
 - The keypad is a Seeburg **Microlog** keypad: a gold-finger contact board plus
   a small silver-finger board on the back, joined by the original harness (two
   card-edge sockets wired together). The harness has **13 loose wires**, and those
-  go to the Teensy. Each key joins one, two or three pairs of them. Andrew found
+  go to the Teensy. Each key joins one, two or three pairs of them. Testing found
   the pairs with `keypad_mapper` (2026-10-29); they are in the `KEYS` table in
   the program (table below).
 - **The keys may latch.** If yours stay down until a reset solenoid releases them,

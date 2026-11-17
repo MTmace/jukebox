@@ -24,7 +24,7 @@ A 34" 21:9 panel's picture area is about **31.3" x 13.4"**; with bezels most are
 
 Signal path: **Pi 5 -> InnoMaker HiFi DAC HAT (PCM5122, RCA out, 2.1 Vrms) -> NAD line input -> speakers.** No pot sits in the audio path.
 
-**Decided (Andrew, 2026-10-08): the stock Seeburg volume knob is not used.** Its location in the cabinet is unknown and may be awkward. Volume comes from the **knob on the Koolertron 4-key macro pad** in the glass button bar, which plugs straight into the Pi as a USB keyboard.
+**Decided (2026-10-08): the stock Seeburg volume knob is not used.** Its location in the cabinet is unknown and may be awkward. Volume comes from the **knob on the Koolertron 4-key macro pad** in the glass button bar, which plugs straight into the Pi as a USB keyboard.
 
 1. In Koolertron's setup program on your Windows PC (pad plugged into the PC), set the knob to type these keys:
    - Turn clockwise: `=` (Fruitbox `VolUp`)

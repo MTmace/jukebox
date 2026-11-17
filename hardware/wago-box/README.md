@@ -55,6 +55,6 @@ set back from the front and hardly show. See `two_colour_preview.png`.
 4. To open, lift the lid edge with a fingertip at one of the wire slots (they run up to the lid).
 
 ## Adjusting
-Connector size: Andrew's 221-412s measure 12.9 x 17.9 mm (`wago_w`, `wago_d`); `n_wago` = number of connectors (4); `fit` = total play round each connector (0.15 mm), `gap` =
+Connector size: The 221-412s measure 12.9 x 17.9 mm (`wago_w`, `wago_d`); `n_wago` = number of connectors (4); `fit` = total play round each connector (0.15 mm), `gap` =
 space between connectors, `bay` = wiring bay depth, `in_w` / `slot_w` = input / output slot width.
 Snap: `bump` = how far each bump sticks out (0.6 mm; bigger = tighter). `lid_gap` = clearance round the lid (0.15 mm).

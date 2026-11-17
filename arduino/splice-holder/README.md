@@ -9,11 +9,11 @@ walls. The levers stay free and the wires leave from both long sides.
 
 ![preview](preview.png)
 
-Status: sized for 14 connectors (2026-10-30: Andrew needs 14; was 13; each is 8.68 mm wide,
-from his block of 11 at 95.5 mm, so 13 is about 112.8 mm). Measured block of 11 (95.5 mm wide,
+Status: sized for 14 connectors (2026-10-30: 14 needed; was 13; each is 8.68 mm wide,
+from a measured block of 11 at 95.5 mm, so 13 is about 112.8 mm). Measured block of 11 (95.5 mm wide,
 39.4 mm along the wires, 14.75 mm tall). The strap is 5.2 mm wide to sit in
 the 5.5 mm groove across the connector tops, with round 2.65 mm pegs for the
-2.74 mm holes (Andrew's measurements). The groove floor measured 14.8 mm above the
+2.74 mm holes (measured). The groove floor measured 14.8 mm above the
 connector bottom; after fit test 2 the screw posts were lowered 1 mm to 13.8 mm, so the strap is a flat
 bar lying in the groove. The end walls are full post height only beside the
 posts and slope down to lip height at the holder's ends, so the levers are free. Fit test 1 (2026-10-29):

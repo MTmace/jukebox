@@ -16,11 +16,11 @@ from make_3mf import build
 OUT = os.path.join(mk.HERE, "top-half")
 ICON_H, ICON_W = 5.0, 10.0    # max icon size, mm
 ICON_Y = 4.0                  # icon centre above the cap centre (stem boss reaches 2.8)
-# Busy icons that don't read at 5 mm, swapped for simpler ones (Andrew, 2026-11-12)
+# Busy icons that don't read at 5 mm, swapped for simpler ones (2026-11-12)
 SWAP = {"trash3-fill": "ban-left",             # Clear Queue
         "bootstrap-reboot": "arrow-clockwise",  # Reboot
         "database-gear": "gear-fill",           # Rebuild Playlist
-        # Pad keys 1-3 now pick playlists, not favourite lights (Andrew, 2026-11-16)
+        # Pad keys 1-3 now pick playlists, not favourite lights (2026-11-16)
         "1-circle": "all-text",                 # Playlist All Songs ("ALL", DejaVu Sans Bold)
         "2-circle": "mic-fill",                 # Playlist Oldies (a microphone)
         "3-circle": "tree-fill"}                # Playlist Christmas (a tree)

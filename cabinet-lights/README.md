@@ -44,7 +44,7 @@ on separate pins also work: give each its own `device` and its own
 Pin 32 isn't used by the DAC HAT (it uses GPIO 18-21 for sound and 2-3
 for its volume chip).
 
-The guide used pin 19 (GPIO 10) until 2026-11-11, when that pin on Andrew's
+The guide used pin 19 (GPIO 10) until 2026-11-11, when that pin on this
 Pi stopped working (told to switch on with `pinctrl`, it still read `lo`).
 If you're on pin 19 and the strips stop responding, test it the same way:
 `sudo pinctrl set 10 op dh; pinctrl get 10` should end in `hi`. Reboot after

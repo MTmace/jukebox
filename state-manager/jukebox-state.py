@@ -99,8 +99,8 @@ FB_VOL_UP = "KEY_EQUAL"                   # VolUp
 FB_VOL_DOWN = "KEY_MINUS"                 # VolDown
 MAX_VOLUME = 100                          # fruitbox.ini MaxVolume
 # After a sleep, the first song played came out far too loud although Fruitbox
-# still showed the set volume (Andrew 2026-11-16); one step up and back down
-# (what he did by hand) makes Fruitbox apply its volume again, at whatever level
+# still showed the set volume (2026-11-16); one step up and back down
+# (what fixed it by hand) makes Fruitbox apply its volume again, at whatever level
 # it is set to. Done right at wake, before any song plays (so nothing is heard
 # loud), and once more when the first song after the wake starts, in case
 # Fruitbox only picks it up then.

@@ -4,3 +4,17 @@ __pycache__/
 fruitbox.db
 Thumbs.db
 desktop.ini
+
+# Personal and machine-specific files: keep your own library and setup out of the repo
+FlacRatings/*.csv
+*.csv.bak
+playlist-missing.txt
+playlist-duplicates.txt
+*.log
+*.bak
+.env
+*.cred
+secrets/
+local/
+*.local.ini
+*.local.cfg
