@@ -38,6 +38,12 @@ Service keys and Pause need two presses within 5 s.
 
 ## Playlist keys (pad keys 1, 2, 3)
 
+**Parked since 1.5 (2026-11-17): keys 1-3 do nothing.** Fruitbox takes about 23
+seconds for every playlist change (its own drawing, measured with any skin, not
+the network), so stepping to a playlist isn't practical. `PLAYLIST_KEYS` is
+empty; the note above it says how to switch them back on. What follows is how
+they work when on.
+
 The three pad keys that send Keypad 1 / 2 / 3 jump Fruitbox straight to a
 playlist group (one press, no confirm):
 
@@ -72,6 +78,17 @@ queue) -> 2 s -> pause Fruitbox (SIGSTOP) -> screens off. Wake: resume Fruitbox
 -> screens on. Fruitbox is never left paused: it is resumed when the service
 starts or stops, before F20/F21/F22, and if found paused while awake (logged
 as WARNING). The log says "Fruitbox paused while asleep" / "Fruitbox resumed".
+
+## Requests from the status page (1.4)
+
+The status page's Control page (http://jukebox.local/control) can ask for Wake,
+Sleep, Attract on / off, Reboot, Rebuild playlists and Shut down. It writes one
+word to `/dev/shm/jukebox_request`; jukebox-state checks for it about once a
+second, does exactly what the matching key would, deletes the file and logs
+`status page asks: <word>`. Unknown words, requests older than 30 seconds, and
+files not written by root or mtmace are ignored. The buttons come from
+`WEB_REQUESTS` (and which ones ask "are you sure?" from `WEB_CONFIRM`) at the
+top of `jukebox-state.py`, so the page only offers what the installed version can do.
 
 ## Volume after waking (1.3)
 

@@ -31,7 +31,8 @@ key can't restart the jukebox or put it to sleep):
     F20 Reboot   F21 Rebuild Playlist (update-jukebox.sh, then reboot)
     F22 Shut Down   Pause Sleep
 
-And the playlist keys (pad keys 1 / 2 / 3 send Keypad 1 / 2 / 3): one press jumps
+And the playlist keys (PARKED since 1.5: PLAYLIST_KEYS is empty, keys 1-3 do
+nothing; see the note there). When on, pad keys 1 / 2 / 3 (Keypad 1 / 2 / 3) jump
 Fruitbox straight to that playlist group (All Songs / Oldies / Christmas).
 Fruitbox can only step to the NEXT group (Right Alt), so it presses Right Alt
 and reads the group Fruitbox now shows (GROUP= in /dev/shm/jukebox_fruitbox.txt,
@@ -49,7 +50,7 @@ hold the keyboards while asleep.
 Log: /home/mtmace/fruitbox/jukebox-state.log  (and journalctl -u jukebox-state -f)
 Test without the Pi:  python3 jukebox-state.py --selftest
 """
-VERSION = "1.3"   # bump on every change; the status page shows it
+VERSION = "1.5"   # bump on every change; the status page shows it
 
 import glob, os, re, subprocess, sys, threading, time
 from select import select
@@ -100,16 +101,32 @@ FB_VOL_DOWN = "KEY_MINUS"                 # VolDown
 MAX_VOLUME = 100                          # fruitbox.ini MaxVolume
 # After a sleep, the first song played came out far too loud although Fruitbox
 # still showed the set volume (2026-11-16); one step up and back down
-# (what fixed it by hand) makes Fruitbox apply its volume again, at whatever level
+# (what he did by hand) makes Fruitbox apply its volume again, at whatever level
 # it is set to. Done right at wake, before any song plays (so nothing is heard
 # loud), and once more when the first song after the wake starts, in case
 # Fruitbox only picks it up then.
 
+# Requests from the status page's Control page (1.4). The page writes one word to
+# REQUEST_FILE; this checks it about once a second, does it, and deletes the file.
+# The page reads WEB_REQUESTS and WEB_CONFIRM from this installed file to make its
+# buttons, so a request is only offered if this version can do it.
+REQUEST_FILE = "/dev/shm/jukebox_request"
+REQUEST_MAX_AGE = 30                      # older than this (seconds): stale, ignored
+WEB_REQUESTS = {"wake": "Wake up",
+                "sleep": "Sleep",
+                "attract": "Attract mode on / off",
+                "reboot": "Reboot",
+                "rebuild": "Rebuild playlists (then reboots)",
+                "shutdown": "Shut down"}
+WEB_CONFIRM = ("sleep", "reboot", "rebuild", "shutdown")   # the page asks "are you sure?" first
+
 # Playlist keys: key -> the start of the playlist group's name (case ignored,
 # the song count Fruitbox shows after it, e.g. "Oldies - Rock & Roll (412)", too)
-PLAYLIST_KEYS = {"KEY_KP1": "All Songs",
-                 "KEY_KP2": "Oldies",
-                 "KEY_KP3": "Christmas"}
+# PARKED 2026-11-17: Fruitbox takes ~23 s per group change (its own
+# drawing, any skin), so stepping to a playlist isn't practical. Keys 1-3 do
+# nothing until a better option exists. To bring them back:
+#   {"KEY_KP1": "All Songs", "KEY_KP2": "Oldies", "KEY_KP3": "Christmas"}
+PLAYLIST_KEYS = {}
 GROUP_FILE = "/dev/shm/jukebox_fruitbox.txt"  # status page skin box: GROUP=<playlist shown now>
 GROUP_WAIT = 3.0                          # Fruitbox writes that file once a second
 MAX_GROUPS = 30                           # Fruitbox's own limit
@@ -647,6 +664,62 @@ class Manager:
 busy = threading.Event()
 
 
+def take_request(path=None, now=None, owners=None):
+    """The word in the status page's request file, or None. Deletes the file. Ignores
+    it if stale, unknown, or written by anyone but root or the jukebox user."""
+    path = path or REQUEST_FILE
+    try:
+        st = os.stat(path)
+        with open(path) as f:
+            word = f.read(40).strip().lower()
+        os.remove(path)
+    except OSError:
+        return None
+    if owners is None:
+        owners = {0}
+        try:
+            import pwd
+            owners.add(pwd.getpwnam(USER).pw_uid)
+        except (ImportError, KeyError):
+            pass
+    if st.st_uid not in owners:
+        log("request %r ignored: file not written by root or %s" % (word, USER))
+        return None
+    if (now if now is not None else time.time()) - st.st_mtime > REQUEST_MAX_AGE:
+        log("request %r ignored: stale" % word)
+        return None
+    if word not in WEB_REQUESTS:
+        log("request %r ignored: unknown" % word)
+        return None
+    return word
+
+
+def do_request(mgr, word, fbkeys=None):
+    """Carry out a status-page request (same as the keys would)."""
+    log("status page asks:", word)
+    if word == "wake":
+        with mgr.lock:
+            if mgr.asleep:
+                mgr.wake("status page")
+            else:
+                log("wake: already awake (%s)" % mgr.state)
+    elif word == "sleep":
+        threading.Thread(target=mgr.sleep, args=("status page",), daemon=True).start()
+    elif word == "attract":
+        if mgr.asleep:
+            log("attract ignored: asleep, wake it first")
+        elif not fbkeys or not fbkeys.ui:
+            log("attract: no virtual keyboard, can't press Fruitbox's attract key")
+        else:
+            mgr.touch("status page")
+            fbkeys.press(FB_ATTRACT)
+    elif word in ("reboot", "rebuild", "shutdown"):
+        if busy.is_set():
+            log(word, "ignored: already busy")
+        else:
+            threading.Thread(target=run_service, args=(mgr, word), daemon=True).start()
+
+
 def run_service(mgr, action):
     busy.set()
     try:
@@ -699,6 +772,7 @@ def run(evdev, ecodes):
     fbkeys = FruitboxKeys()
     mgr = Manager(RealIO(fbkeys))
     playlists = PlaylistKeys(fbkeys)
+    remove(REQUEST_FILE)           # never act on a request left from before a restart
     log("version", VERSION, "watching for", ", ".join(f"{n} = {w[0]}" for n, w in SERVICE_KEYS.items()),
         "and playlist keys", ", ".join(f"{n} = {w}" for n, w in PLAYLIST_KEYS.items()))
 
@@ -739,6 +813,9 @@ def run(evdev, ecodes):
         if time.monotonic() - last_tick >= 1:
             last_tick = time.monotonic()
             mgr.tick()
+            word = take_request()
+            if word:
+                do_request(mgr, word, fbkeys)
         grab_all(mgr.asleep)
         if not devices:
             time.sleep(1)
@@ -958,6 +1035,19 @@ def selftest():
                    "%d presses: %s" % (st["presses"], msg), "1 press, didn't change"))
     msg = jump_to_group(lambda: "Christmas", press, lambda: None, 3.0, clk, nap)
     checks.append(("playlist: no status file does nothing", "can't see" in msg, msg, "can't see"))
+
+    # status page requests
+    rq = os.path.join(tmp, "request")
+    me = {os.getuid()}
+    for what, text, age, owners, want in (("request: sleep taken", "sleep\n", 0, me, "sleep"),
+                                          ("request: unknown ignored", "format\n", 0, me, None),
+                                          ("request: stale ignored", "wake", 60, me, None),
+                                          ("request: other user ignored", "wake", 0, {12345}, None)):
+        with open(rq, "w") as f:
+            f.write(text)
+        got = take_request(rq, time.time() + age, owners)
+        checks.append((what, got == want and not os.path.exists(rq), repr(got), repr(want)))
+    checks.append(("request: no file", take_request(rq, None, me) is None, "None", "None"))
 
     # sound routing check
     good_links = ("SDL Application:output_FL\n  |-> jukebox_bass:playback_FL\n"

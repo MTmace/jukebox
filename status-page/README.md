@@ -110,3 +110,23 @@ fruitbox.ini; the bass start level and range from the `DEFAULT_DB`, `MIN_DB`,
 (`ACTIVE_SECONDS`, `SLEEP_MINUTES`, `CONFIRM_SECONDS`) from the installed
 jukebox-state.py; light levels and themes from jukebox-bridge.ini. Change the
 file, restart that service, and the page follows (a "?" means it couldn't read it).
+
+## Control page (1.4)
+
+http://jukebox.local/control (the "control" link at the top of the status page).
+The status page itself stays read-only; every action is on this separate page.
+Each section has dropdowns and a Go button.
+
+- **Jukebox state** (one dropdown): Wake up, Sleep, Attract on / off, Reboot, Rebuild playlists,
+  Shut down. These go to the state manager (needs jukebox-state 1.4), which does
+  exactly what the keys do. The buttons and which ones ask "are you sure?" come
+  from `WEB_REQUESTS` / `WEB_CONFIRM` in the installed jukebox-state.py.
+- **Services** (service dropdown + action dropdown): Start / Restart / Stop for every `jukebox-*.service` installed
+  (system ones in /etc/systemd/system, user ones in ~/.config/systemd/user).
+  Stop asks "are you sure?" first. The status page itself can only be restarted.
+
+No PIN: anyone on the home network can use it. Buttons send a form, so a link,
+a bookmark or a page refresh never presses one. The installer adds
+/etc/sudoers.d/jukebox-status so the page may start / stop / restart only the
+jukebox services installed at that time; run the installer again after adding a
+new service.

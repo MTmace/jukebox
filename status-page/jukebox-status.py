@@ -27,7 +27,7 @@ Where each value comes from
 Runs as mtmace (systemd service jukebox-status). Log: journalctl -u jukebox-status -f
 Test by hand:  python3 /usr/local/bin/jukebox-status.py --print
 """
-VERSION = "1.3"   # bump on every change; the status page shows it
+VERSION = "1.4"   # bump on every change; the status page shows it
 
 import configparser, html, json, os, re, shutil, socket, subprocess, sys, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -51,8 +51,12 @@ PORTS = [80, 8080]                 # first one that is free
 SHOW_KEYS = ["KEY_F24"]            # macro pad key that shows the summary on screen
 OVERLAY = "/usr/local/bin/jukebox-status-overlay.py"
 
-SYSTEM_SERVICES = ["jukebox-bridge", "jukebox-state", "jukebox-status"]
-USER_SERVICES = ["jukebox-bass"]
+# Our services are found by name: every jukebox-*.service installed on the Pi.
+SYSTEM_UNIT_DIR = "/etc/systemd/system"
+USER_UNIT_DIR = HOME + "/.config/systemd/user"
+STATE_PROGRAM = "jukebox-state"             # the state manager; its WEB_REQUESTS make the state buttons
+REQUEST_FILE = "/dev/shm/jukebox_request"   # read by jukebox-state 1.4+
+SELF = "jukebox-status"                     # this page: restart only (stop would take the page away)
 
 
 def log(*a):
@@ -435,12 +439,28 @@ def bass_note():
     return " · ".join(parts) + ", 0 = flat" if parts else "0 = flat"
 
 
+def _units(folder):
+    import glob
+    return sorted(os.path.basename(p)[:-len(".service")]
+                  for p in glob.glob(os.path.join(folder, "jukebox-*.service")))
+
+
+def system_services():
+    """Our system services: every jukebox-*.service in /etc/systemd/system."""
+    return _units(SYSTEM_UNIT_DIR)
+
+
+def user_services():
+    """Our user services (run as mtmace): every jukebox-*.service in ~/.config/systemd/user."""
+    return _units(USER_UNIT_DIR)
+
+
 def services():
     out = []
-    for s in SYSTEM_SERVICES:
+    for s in system_services():
         out.append({"name": s, "state": sh(["systemctl", "is-active", s]) or "not installed",
                     "boot": sh(["systemctl", "is-enabled", s]) or "-", "version": program_version(s)})
-    for s in USER_SERVICES:
+    for s in user_services():
         out.append({"name": s + " (user)", "state": sh(["systemctl", "--user", "is-active", s]) or "not installed",
                     "boot": sh(["systemctl", "--user", "is-enabled", s]) or "-",
                     "version": program_version(s, user=True)})
@@ -452,9 +472,9 @@ def logs():
     for p in LOGS:
         if os.path.exists(p):
             d[p] = tail(p, 15)
-    for s in SYSTEM_SERVICES:
+    for s in system_services():
         d["journal: " + s] = sh(["journalctl", "-u", s, "-n", "12", "--no-pager", "-o", "short"]).splitlines()
-    for s in USER_SERVICES:
+    for s in user_services():
         d["journal: " + s] = sh(["journalctl", "--user", "-u", s, "-n", "12", "--no-pager", "-o", "short"]).splitlines()
     return d
 
@@ -857,7 +877,8 @@ def page(s):
     out = ["<!doctype html><html lang=en><head><meta charset=utf-8>",
            "<meta name=viewport content='width=device-width,initial-scale=1'>",
            "<title>Jukebox status</title><style>", CSS, "</style></head><body>",
-           f"<header><h1>SEEBURG FIRESTAR · STATUS</h1><span>{e(s['system']['time'])} · refreshes every 5 s</span></header><main>"]
+           f"<header><h1>SEEBURG FIRESTAR · STATUS</h1><span>{e(s['system']['time'])} · refreshes every 5 s · "
+           "<a href='/control'>control</a></span></header><main>"]
     pr = s["problems"]
     out.append("<section class=problems><h2>Things to check</h2>")
     out.append("<ul>" + "".join(f"<li>{e(x)}</li>" for x in pr) + "</ul>" if pr
@@ -926,6 +947,175 @@ try{scrollTo(0,+sessionStorage.getItem('jbY')||0)}catch(e){}
     return "".join(out)
 
 
+# ---------------------------------------------------------------- control page
+# Status stays read-only; every action lives on /control, sent as a form POST (a
+# link or a page refresh can never trigger one). Nothing here is a list of its
+# own: the services are the installed jukebox-*.service files, the state buttons
+# are WEB_REQUESTS / WEB_CONFIRM in the installed jukebox-state.py.
+SERVICE_OPS = ("start", "restart", "stop")
+SERVICE_CONFIRM = ("stop",)
+
+
+def state_requests():
+    """({word: label}, {words that need a confirm}) from the installed state manager."""
+    import ast
+    prog = program_path(STATE_PROGRAM)
+    try:
+        text = open(prog, encoding="utf-8").read() if prog else ""
+    except OSError:
+        text = ""
+    found = {}
+    for name in ("WEB_REQUESTS", "WEB_CONFIRM"):
+        m = re.search(rf"^{name}\s*=\s*([\[({{].*?[\])}}])\s*(?:#.*)?$", text, re.M | re.S)
+        try:
+            found[name] = ast.literal_eval(m.group(1)) if m else None
+        except (ValueError, SyntaxError):
+            found[name] = None
+    reqs = found["WEB_REQUESTS"] if isinstance(found["WEB_REQUESTS"], dict) else {}
+    return ({str(k): str(v) for k, v in reqs.items()},
+            set(found["WEB_CONFIRM"] or ()) if reqs else set())
+
+
+def control_targets():
+    """[(unit, user?)] of the services the page may control."""
+    return [(u, False) for u in system_services()] + [(u, True) for u in user_services()]
+
+
+def service_action(unit, user, op):
+    """Start / stop / restart one of our services. Returns a message for the page."""
+    if (unit, user) not in control_targets() or op not in SERVICE_OPS:
+        return "Not one of the jukebox services: nothing done."
+    if unit == SELF and op != "restart":
+        return "The status page can only restart itself (stopping it would take this page away)."
+    cmd = (["systemctl", "--user"] if user else ["sudo", "-n", "systemctl"]) + [op, unit]
+    if unit == SELF:
+        # answer the browser first, then restart (this process goes away)
+        threading.Timer(1.0, lambda: subprocess.run(cmd[:-2] + ["--no-block"] + cmd[-2:])).start()
+        return f"Restarting {unit}: the page comes back in a few seconds."
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError) as ex:
+        return f"{op} {unit} failed: {ex}"
+    if r.returncode:
+        err = (r.stderr or r.stdout or "").strip().splitlines()
+        hint = (" (run the status page installer once more: it adds the permission for this)"
+                if not user and "password" in " ".join(err).lower() else "")
+        return f"{op} {unit} failed: {err[-1] if err else 'code %d' % r.returncode}{hint}"
+    state = sh((["systemctl", "--user"] if user else ["systemctl"]) + ["is-active", unit]) or "?"
+    log(f"control: {op} {unit} -> {state}")
+    return f"{op.capitalize()} {unit}: done, it is now {state}."
+
+
+def state_action(word):
+    reqs, _ = state_requests()
+    if word not in reqs:
+        return "The installed state manager doesn't take that request: nothing done."
+    try:
+        tmp = REQUEST_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            f.write(word + "\n")
+        os.replace(tmp, REQUEST_FILE)          # appears in one piece
+    except OSError as ex:
+        return f"Couldn't send {word}: {ex}"
+    log(f"control: asked the state manager for {word}")
+    return f"Sent \"{reqs[word]}\" to the state manager; it acts on it within a second or two."
+
+
+CONTROL_CSS = """
+header a{color:var(--text)}
+form{display:inline}
+button,a.btn{display:inline-block;text-decoration:none;font:inherit;font-size:15px;color:var(--text);background:#241a16;border:1px solid var(--line);
+ border-radius:6px;padding:6px 12px;margin:3px 6px 3px 0;cursor:pointer}
+button:hover,a.btn:hover{border-color:var(--dim)}button.risky{border-color:#6b3a33}
+.big{padding:10px 16px}
+.msg{grid-column:1/-1;border-color:var(--amber)}
+.confirm{grid-column:1/-1;border-color:var(--bad);border-width:2px}
+select{font:inherit;font-size:15px;color:var(--text);background:#241a16;border:1px solid var(--line);
+ border-radius:6px;padding:6px 8px;margin:3px 6px 3px 0;max-width:100%}
+table.svc{margin-top:10px}
+"""
+
+
+def _form(fields, label, cls=""):
+    e = html.escape
+    hidden = "".join(f"<input type=hidden name={e(k)} value='{e(v)}'>" for k, v in fields.items())
+    return f"<form method=post action=/control>{hidden}<button class='{cls}'>{e(label)}</button></form>"
+
+
+def control_page(msg="", confirm=None):
+    """confirm: dict of form fields waiting for "are you sure?" (shown at the top)."""
+    e = html.escape
+    now = read(JUKEBOX_MODE).strip().lower()
+    reqs, req_confirm = state_requests()
+    out = ["<!doctype html><html lang=en><head><meta charset=utf-8>",
+           "<meta name=viewport content='width=device-width,initial-scale=1'>",
+           "<title>Jukebox control</title><style>", CSS, CONTROL_CSS, "</style></head><body>",
+           "<header><h1>JUKEBOX CONTROL</h1><span><a href='/'>back to status</a> · "
+           f"state now: <b>{e(now.upper() or 'unknown')}</b> · <a href='/control'>refresh</a></span></header><main>"]
+    if confirm:
+        what = (f"{confirm['op']} {confirm['unit']}" if confirm.get("kind") == "service"
+                else reqs.get(confirm.get("word", ""), confirm.get("word", "")))
+        out.append(f"<section class=confirm><h2>Are you sure?</h2><p>{e(what.capitalize())}</p>"
+                   + _form(dict(confirm, sure="yes"), "Yes, " + what, "big risky")
+                   + "<a class='btn big' href='/control'>Cancel</a></section>")
+    if msg:
+        out.append(f"<section class=msg><p>{e(msg)}</p></section>")
+    out.append("<section><h2>Jukebox state</h2>")
+    if reqs:
+        opts = "".join(f"<option value='{e(w)}'>{e(l)}{' (asks first)' if w in req_confirm else ''}</option>"
+                       for w, l in reqs.items())
+        out.append("<p class=normal>Does what the keys do, through the state manager.</p>"
+                   "<form method=post action=/control><input type=hidden name=kind value=state>"
+                   f"<select name=word aria-label='Jukebox state request'>{opts}</select> "
+                   "<button>Go</button></form>")
+    else:
+        out.append("<p>The installed state manager (jukebox-state) doesn't take requests from this "
+                   "page yet: that needs jukebox-state 1.4 or later.</p>")
+    out.append("<p><a href='/states'>status menu: what each state means</a></p></section>")
+    targets = control_targets()
+    units = "".join(f"<option value='{'u' if user else 's'}:{e(unit)}'>{e(unit)}{' (user)' if user else ''}</option>"
+                    for unit, user in targets)
+    ops = "".join(f"<option value='{op}'>{op.capitalize()}{' (asks first)' if op in SERVICE_CONFIRM else ''}</option>"
+                  for op in SERVICE_OPS)
+    out.append("<section><h2>Services</h2>"
+               "<form method=post action=/control><input type=hidden name=kind value=service>"
+               f"<select name=target aria-label=Service>{units}</select> "
+               f"<select name=op aria-label=Action>{ops}</select> <button>Go</button></form><table class=svc>")
+    for unit, user in targets:
+        state = sh((["systemctl", "--user"] if user else ["systemctl"]) + ["is-active", unit]) or "?"
+        cls = "st-active" if state == "active" else "st-bad"
+        out.append(f"<tr><td>{e(unit)}{' (user)' if user else ''}</td><td class='{cls}'>{e(state)}</td></tr>")
+    out.append("</table><p class=normal>Every jukebox-*.service installed on the Pi. "
+               "The status page itself can only be restarted.</p></section>")
+    out.append("</main></body></html>")
+    return "".join(out)
+
+
+def control_post(fields):
+    """Handle one button press. Returns (page, None) to show a confirm page, or
+    (None, message) when done: the browser is then sent back to /control with the
+    message, so a refresh can't press the button again."""
+    kind = fields.get("kind", "")
+    sure = fields.get("sure") == "yes"
+    if kind == "service":
+        if "target" in fields:                       # dropdown value "s:<unit>" or "u:<unit>" (user)
+            where, _, unit = fields["target"].partition(":")
+            user = where == "u"
+        else:                                        # the "are you sure?" form
+            unit, user = fields.get("unit", ""), bool(fields.get("user"))
+        op = fields.get("op", "")
+        if op in SERVICE_CONFIRM and not sure and unit != SELF:
+            return control_page(confirm={"kind": "service", "unit": unit, "user": "1" if user else "", "op": op}), None
+        return None, service_action(unit, user, op)
+    if kind == "state":
+        word = fields.get("word", "")
+        _, need = state_requests()
+        if word in need and not sure:
+            return control_page(confirm={"kind": "state", "word": word}), None
+        return None, state_action(word)
+    return None, "Unknown button: nothing done."
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?")[0]
@@ -936,6 +1126,10 @@ class Handler(BaseHTTPRequestHandler):
                 body, ctype = themes_page().encode(), "text/html; charset=utf-8"
             elif path == "/states":
                 body, ctype = states_page().encode(), "text/html; charset=utf-8"
+            elif path == "/control":
+                from urllib.parse import parse_qs, urlsplit
+                msg = parse_qs(urlsplit(self.path).query).get("msg", [""])[0][:500]
+                body, ctype = control_page(msg).encode(), "text/html; charset=utf-8"
             elif path == "/api/status":
                 body, ctype = json.dumps(collect(), indent=1, default=str).encode(), "application/json"
             elif path == "/api/summary":
@@ -948,6 +1142,30 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as ex:                       # never take the page down
             log("error:", repr(ex))
             body, ctype = f"error collecting status: {ex!r}".encode(), "text/plain"
+        self.reply(body, ctype)
+
+    def do_POST(self):
+        from urllib.parse import parse_qs
+        if self.path.split("?")[0] != "/control":
+            self.send_error(404)
+            return
+        try:
+            n = min(int(self.headers.get("Content-Length") or 0), 4096)
+            fields = {k: v[0] for k, v in parse_qs(self.rfile.read(n).decode("utf-8", "replace")).items()}
+            page_html, msg = control_post(fields)
+        except Exception as ex:                       # never take the page down
+            log("control error:", repr(ex))
+            page_html, msg = None, f"Error: {ex!r}"
+        if page_html is not None:
+            self.reply(page_html.encode(), "text/html; charset=utf-8")
+            return
+        from urllib.parse import quote
+        self.send_response(303)
+        self.send_header("Location", "/control?msg=" + quote(msg))
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def reply(self, body, ctype):
         self.send_response(200)
         self.send_header("Content-Type", ctype)
         self.send_header("Cache-Control", "no-store")
