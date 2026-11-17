@@ -46,7 +46,7 @@ The inlet sizes come from the seller's listing. Measure the real part:
 - the body that goes through the panel (listing 47 x 27.5 mm) -> `CUT_W`, `CUT_H`
 - centre to centre of the two ear screw holes (guessed 40 mm) -> `EAR_PITCH`
 - the old hole if it isn't exactly 91 x 41 -> `HOLE_W`, `HOLE_H`
-- screw hole centre to hole edge (Andrew measured 6.7 mm) -> `SCREW_OUT`
+- screw hole centre to hole edge (measured 6.7 mm) -> `SCREW_OUT`
 
 ## Safety
 

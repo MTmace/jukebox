@@ -1,5 +1,5 @@
-# Genre map for genre_library.py: exactly Andrew's genre list (genres.json
-# from his library manager), nothing added. One group per top-level genre;
+# Genre map for genre_library.py: exactly the owner's genre list (genres.json
+# from a music library manager), nothing added. One group per top-level genre;
 # its sub-genres and alternate names are the tag values that go in it.
 #
 # Each line:   Group Name = tag value, tag value, ...

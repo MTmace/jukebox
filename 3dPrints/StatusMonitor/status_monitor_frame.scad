@@ -44,7 +44,7 @@ fpc_w     = 40;           // opening for the ribbon in the wall and the cover
 open_w    = 374.6;        // glass opening 14.75"
 open_h    = 120.4;        // glass opening 4.74"
 flange    = 8;            // face extends this far past the opening at the ends
-flange_v  = 8.5;          // and at the top and bottom (Andrew's channel test: 8.5 fits best)
+flange_v  = 8.5;          // and at the top and bottom (channel test: 8.5 fits best)
 ear_l     = 0;            // screw ears on the cover ends (0 = none; the frame slides into the glass channel instead)
 ear_w     = 24;
 ear_hole  = 4.2;          // #6 wood screw
@@ -54,7 +54,7 @@ face_t    = 2.0;
 wall      = 2.4;
 back_t    = 3.0;
 boss_d    = 6;
-gap_out   = 5;            // room between the walls and the cabinet's bevelled metal (Andrew measured ~5 mm)
+gap_out   = 5;            // room between the walls and the cabinet's bevelled metal (measured ~5 mm)
 cover_out = 4.5;          // back cover and posts stay this close to the walls
 pilot     = 2.5;          // M3 x 6 mm self-tapping screw (cover 3 mm + post hole 5 mm; 10 mm would poke through the face)
 screw_cl  = 3.4;
@@ -78,8 +78,8 @@ feet_d    = 12;
 feet_xy   = [for (x = [-150, -75, -25, 95, 160], y = [-45, 45]) [x, y]];
 
 // ---- boards ------------------------------------------------------------
-main_l = 88;  main_w = 55;    // driver board (seller says 59; set from Andrew's tray tests) (HDMI / USB-C end faces +x)
-key_l  = 19;  key_w  = 55.5;    // small button board (set from Andrew's tray tests) (button side faces -x)
+main_l = 88;  main_w = 55;    // driver board (seller says 59; set from tray tests) (HDMI / USB-C end faces +x)
+key_l  = 19;  key_w  = 55.5;    // small button board (set from tray tests) (button side faces -x)
 pcb_t  = 1.6;
 stand  = 3.0;             // room under the boards for solder joints
 bclear = 0.4;

@@ -62,7 +62,7 @@ def song_codes(buttons, sequence, slots):
     fastest (100, 101, ...). colrow: the whole order is turned round, so the
     first line changes fastest and the last slowest (100, 200, 110, 210, ...,
     170, 270, 101, 201, ...). On the Firestar skin that makes each strip an A/B
-    pair, the tens digit the row and the ones digit the column (Andrew saw 178
+    pair, the tens digit the row and the ones digit the column (checked: 178
     and 278 on the Pi, 2026-11-09)."""
     if sequence == "colrow":
         order = (tuple(reversed(d)) for d in itertools.product(*reversed(buttons)))

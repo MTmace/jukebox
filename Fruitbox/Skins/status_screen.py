@@ -7,10 +7,10 @@ Laid out for the Celesttouch 14.5" 2560x720 (32:9) bar panel behind clear
 glass in the right-hand panel beside the keypad (opening 14.75 x 4.74", the
 picture is about 13.96 x 3.93", so all of it shows). One row: coming up,
 now playing with cover art and a 7-segment clock, then the selection readout
-over a spectrum well, then a vertical volume meter (Andrew 2026-10-16).
+over a spectrum well, then a vertical volume meter (2026-10-16).
 No touch (it sits behind glass).
 
-Only the light-bar ribbon on top, no header (Andrew 2026-10-15). The bar
+Only the light-bar ribbon on top, no header (2026-10-15). The bar
 and the main screen both list the queue from the next song (see the note on
 status_coming_up.txt).
 Reuses the main skin's fonts (fonts are numbered once for the whole cfg), its
@@ -22,13 +22,13 @@ from PIL import Image, ImageDraw, ImageFilter
 
 W, H = 2560, 720                   # status screen skin size (32:9 bar panel)
 DISPLAY = 2
-RIBBON_H = 16                      # light-bar ribbon along the top (no header: Andrew 2026-10-15)
+RIBBON_H = 16                      # light-bar ribbon along the top (no header, 2026-10-15)
 ROW_Y, ROW_B = RIBBON_H + 18, H - 20   # top / bottom of the panel row
 GAP = 24
 NP_W, CU_W = 1110, 720             # now playing / coming up widths; selection gets the rest
-VOL_PW = 180                       # volume panel at the far right (Andrew 2026-10-16)
+VOL_PW = 180                       # volume panel at the far right (2026-10-16)
 ART = 560                          # cover art size
-COMING_UP_LINES = 14                # fills the list box (40 px per line, Andrew wants more)
+COMING_UP_LINES = 14                # fills the list box (40 px per line, more wanted)
 ART_BLANK = "art_blank.png"        # main screen's idle cover, baked in behind the art box
 SPEC_BARS = 8
 LED_FONT = 12                      # main screen's 7-segment readout font (technology-mono 152)
@@ -43,7 +43,7 @@ RIBBON_DIR = "lightbars2"          # twinkle frames for the ribbon, like the mai
 def boxes():
     x0 = 24
     cu = (x0, ROW_Y, x0 + CU_W, ROW_B)                       # coming up on the left,
-    np_ = (cu[2] + GAP, ROW_Y, cu[2] + GAP + NP_W, ROW_B)    # now playing in the centre (Andrew 2026-10-24)
+    np_ = (cu[2] + GAP, ROW_Y, cu[2] + GAP + NP_W, ROW_B)    # now playing in the centre (2026-10-24)
     sel = (np_[2] + GAP, ROW_Y, W - 24 - VOL_PW - GAP, ROW_B)
     return np_, cu, sel
 
@@ -65,7 +65,7 @@ def text_x():
 def clock_box():
     np_ = boxes()[0]
     cx = (text_x() + np_[2] - 30) // 2          # centred in the text column
-    y = np_[3] - 24 - 62 - LED_BOX_H             # at the bottom of the panel, track length just under it (Andrew 2026-10-16)
+    y = np_[3] - 24 - 62 - LED_BOX_H             # at the bottom of the panel, track length just under it (2026-10-16)
     return cx - CLOCK_W // 2, y, cx + CLOCK_W // 2, y + LED_BOX_H
 
 
@@ -147,7 +147,7 @@ def make_background(bs):
     im.paste(vol_segments(False), (vx0, vy0), vol_segments(False))
     vol_segments(True).save(os.path.join(bs.OUT, "vol_bar.png"))
 
-    for box in (clock_box(), code_box()):         # selection box copies the clock's border (Andrew)
+    for box in (clock_box(), code_box()):         # selection box copies the clock's border
         d.rounded_rectangle(box, 12, fill=(10, 4, 4), outline=(90, 40, 20), width=3)
     d.rounded_rectangle(spectrum_box(), 12, fill=(6, 6, 8), outline=(60, 60, 70), width=2)
 
@@ -158,10 +158,10 @@ STATUS_FILES = {
     "status_details.txt": (
         "${IF_SONG_PLAYING}${NOW_PLAYING_ARTIST}\n"
         "${IF_SONG_PLAYING}${NOW_PLAYING_ALBUM}\n"
-        "${IF_SONG_PLAYING}${NOW_PLAYING_YEAR}\n"          # own line (Andrew 2026-10-16)
-        "\n"                                               # blank line, then the length (Andrew 2026-10-24)
+        "${IF_SONG_PLAYING}${NOW_PLAYING_YEAR}\n"          # own line (2026-10-16)
+        "\n"                                               # blank line, then the length (2026-10-24)
         "${IF_SONG_PLAYING}Track length: ${NOW_PLAYING_LENGTH}\n"
-        "${IF_SONG_PLAYING}${NOW_PLAYING_PUBLISHER}\n"   # format and bit rate, written by strip_titles.py (Andrew 2026-10-26)
+        "${IF_SONG_PLAYING}${NOW_PLAYING_PUBLISHER}\n"   # format and bit rate, written by strip_titles.py (2026-10-26)
     ),
     "status_time.txt": "${IF_SONG_PLAYING}${NOW_PLAYING_ELAPSED_TIME}\n",
     "status_time_ghost.txt": "${IF_FREEPLAY}88:88${ELSE}88:88\n",  # needs a ${...} or Fruitbox draws a black box

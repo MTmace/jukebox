@@ -174,7 +174,7 @@ def read_tags(path):
             s = number_stars(v)
             if s is not None:
                 ratings.append(s)
-    # FMPS_RATING (0.0-1.0) is what Andrew's library manager writes from Plex
+    # FMPS_RATING (0.0-1.0) is what the music library manager writes from Plex
     # (Plex 0-10 / 10). When a file has it, it wins over any older RATING/POPM
     # left behind by other programs.
     fmps = [s for s in (number_stars(v, fraction=True)

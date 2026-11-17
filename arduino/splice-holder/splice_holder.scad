@@ -1,6 +1,6 @@
 // Holder for 14 lever splice connectors (Adafruit 5619, inline 1-in/1-out)
 // clipped together side by side, for the keypad wires.
-// Measured block of 11 (Andrew): 95.5 wide x 39.4 long (wire direction); 13 = about 112.8
+// Measured block of 11: 95.5 wide x 39.4 long (wire direction); 13 = about 112.8
 // x 14.75 tall. Open top so the levers work; wires leave both long sides.
 //
 // The block drops into the tray. A strap across the middle, between the
@@ -22,9 +22,9 @@ block_w  = count * each_w;
 block_l  = 39.4;          // along the wires
 block_h  = 14.75;
 
-// ---- groove and hole on top of each connector (Andrew, 2026-10-29) ----
+// ---- groove and hole on top of each connector (2026-10-29) ----
 groove_w = 5.5;           // measured: groove across the top for a strap
-groove_z = 13.8;          // measured 14.8 (connector bottom to groove floor); Andrew asked 1 mm lower after fit test 2
+groove_z = 13.8;          // measured 14.8 (connector bottom to groove floor); lowered 1 mm after fit test 2
 hole_d   = 2.74;          // measured: round hole in the groove
 peg_d    = 2.65;           // peg is a little smaller than the hole
 peg_h    = 2.0;           // how deep the peg goes into the hole

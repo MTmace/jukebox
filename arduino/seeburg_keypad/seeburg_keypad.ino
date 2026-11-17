@@ -77,7 +77,7 @@ const uint8_t KEYPAD_PINS[] = {
 };
 const uint8_t NUM_FINGERS = sizeof(KEYPAD_PINS);
 
-// Each key joins one or two pairs of wires when pressed. Measured by Andrew
+// Each key joins one or two pairs of wires when pressed. Measured
 // with keypad_mapper (2026-10-29) through the original harness: its 13 loose
 // wires, labelled 1..13, on Teensy pins 0..12 (so wire n = "finger" n here),
 // plus Left RESET's own wire on pin 24 (finger 14).
@@ -98,8 +98,8 @@ KeyDef KEYS[] = {
   { '7',   3,  8,    8, 10, "7" },
   { '8',   3,  5,    5,  9, "8" },
   { '9',   5,  8,    8,  9, "9" },
-  // Left and Right RESET used to share 1-7 2-7. Andrew cut the shared wire 7
-  // track between them and wired Left RESET's side to pin 24 (2026-10-29).
+  // Left and Right RESET used to share 1-7 2-7. The shared wire 7 track between them
+  // was cut and Left RESET's side was wired to pin 24 (2026-10-29).
   { KEY_LEFT,  1, 14,    2, 14, "Left RESET: page left" },
   { KEY_RIGHT, 1,  7,    2,  7, "Right RESET: page right" },
 };

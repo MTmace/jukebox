@@ -24,7 +24,7 @@ FRUITBOX_SKINS = os.environ.get("FRUITBOX_SKINS", "/opt/fruitbox/skins")
 W, H = 3440, 1440                  # skin size; Fruitbox scales it to the panel
 COLS, ROWS = 9, 8                  # 72 strips x 2 sides = 144 selections
 
-# The glass was repainted (Andrew, 2026-11-08): the paint border is now 1.25"
+# The glass was repainted (2026-11-08): the paint border is now 1.25"
 # at the left/right edges of the 37" x 15" glass and 0.75" at the top/bottom,
 # so the window is ~34.5" x 13.5", bigger than the 34" panel's ~31.3" x 13.1"
 # picture. The whole picture shows, so the skin fills the screen. MASK_IN is how
@@ -44,14 +44,14 @@ HEADER_H = 84                      # credits / Seeburg logo / genre, then the li
 PANEL_H = 228                      # bottom status panels
 SPEC_W = 300                       # spectrum wells at each end of the footer
 SEL_W = 760                        # selection readout panel
-VOL_PW = 110                       # volume panel between Selection and the right spectrum (Andrew 2026-10-24)
+VOL_PW = 110                       # volume panel between Selection and the right spectrum (2026-10-24)
 VOL_BAR_W, VOL_SEGS = 56, 20       # its vertical LED bar; 20 = one segment per SongVolumeStep
-                                   # of 5, so it always shows whole segments (Andrew 2026-10-27)
+                                   # of 5, so it always shows whole segments (2026-10-27)
 PANEL_GAP = 24
 SPEC_BARS = 8                      # bars per spectrum
 # Page turn timed to the ~2 s page-turn sound, like Classic (speed 3, 28-tick ripple).
 # Lower TURN_SPEED = slower turn; TURN_RIPPLE = ticks between first and last column.
-TURN_SPEED = 50                     # Andrew tuned on the Pi 2026-10-16 (50 4 no)
+TURN_SPEED = 50                     # tuned on the Pi 2026-10-16 (50 4 no)
 # Strips show the shortened title strip_titles.py writes (25 chars + "...").
 # Needs strip_titles.py run after genre_library.py, or strip titles are blank.
 SHORT_TITLES = True
@@ -87,7 +87,7 @@ SELECT_SEQUENCE = "colrow"
 # Title strip colour per genre tag. The first entry is the default strip.
 # Keys must match the songs' genre *tag* text (Fruitbox matches it exactly).
 # Strip colour follows the song's genre tag (exact text). Families follow
-# Andrew's genre list (genres.json from his library manager): sub-genres and
+# the owner's genre list (genres.json from a music library manager): sub-genres and
 # alternate names share their parent's colour. Unlisted tags get the default.
 GENRE_FAMILIES = [
     # family            colour            other tags that share it
@@ -126,10 +126,10 @@ FAMILY_OF = {tag: fam for fam, _, others in GENRE_FAMILIES for tag in [fam] + ot
 CREAM = (245, 238, 218)
 INK = (28, 24, 22)
 CHROME_HI, CHROME_LO = (236, 238, 242), (120, 126, 136)
-# top bar: dark, like the cabinet trim around the glass (Andrew: not grey)
+# top bar: dark, like the cabinet trim around the glass (not grey)
 BAR_HI, BAR_LO = (52, 48, 54), (6, 5, 7)
 BAR_TEXT = (238, 230, 216)
-# Firestar selector-panel palette (from Andrew's photo): glowing red, orange
+# Firestar selector-panel palette (from a photo of the panel): glowing red, orange
 # and yellow bars on black, a lime-green "1st DIGIT" box.
 FS_RED = (232, 34, 58)
 FS_ORANGE = (255, 112, 24)
@@ -394,7 +394,7 @@ def panel_boxes():
     gx1 -= SPEC_W + PANEL_GAP
     side_w = (gx1 - gx0 - SEL_W - 2 * PANEL_GAP) // 2
     # Coming Up | Now Playing | Selection, the same order as the second screen,
-    # with Now Playing centred on the screen (Andrew 2026-10-24)
+    # with Now Playing centred on the screen (2026-10-24)
     edge_w = (gx1 - gx0 - side_w - 2 * PANEL_GAP) // 2
     cu_box = (gx0, PANEL_Y, gx0 + edge_w, PANEL_Y + PANEL_H)
     np_box = (cu_box[2] + PANEL_GAP, PANEL_Y, gx1 - edge_w - PANEL_GAP, PANEL_Y + PANEL_H)
@@ -488,7 +488,7 @@ def make_spectrum_bar():
 
 
 # -------------------------------------------------------------------- cfg ---
-# Now Playing title (Andrew 2026-10-16): the short title ("...") is for the strips
+# Now Playing title (2026-10-16): the short title ("...") is for the strips
 # only. Screen 1 squeezes the full title to fit; screen 2 scrolls it when it's too
 # wide. Scrolling moves one step per status timer tick, so that box ticks every
 # frame (a 1 second tick made any speed crawl). Speed 3 was chosen on the Pi.
@@ -523,7 +523,7 @@ def write_cfg():
     a("SkinName = Firestar Ultrawide")
     a(f"SkinDescription = {COLS * ROWS * 2}-selection Seeburg-style rack for a 34in 21:9 screen")
     a("SkinVersion = 1.0")
-    a("NoDuplicates = Yes")          # a song already queued or playing can't be picked again (Andrew 2026-10-17)
+    a("NoDuplicates = Yes")          # a song already queued or playing can't be picked again (2026-10-17)
     a(f"SkinSize = 1 {W} {H}")
     # second (status) display: size here, objects at the end of the file
     L.extend(status_screen.general_lines())
@@ -664,7 +664,7 @@ def write_cfg():
     a("Contents = select_hint.txt")
     a("")
 
-    a("# ---- volume: vertical LED bar that fills upward with ${VOLUME} (no number, Andrew 2026-10-24) ----")
+    a("# ---- volume: vertical LED bar that fills upward with ${VOLUME} (no number, 2026-10-24) ----")
     bx0, by0, bx1, by1 = vol_bar_box()
     a("[bitmap]")
     a(f"Position = {bx0} {by0}")

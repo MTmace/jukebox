@@ -107,7 +107,7 @@ Run it again only if the server's address, share name or password changes, from 
 **Check-FlacRatings.ps1** reads the ratings inside your FLAC files and shows how many songs
 the Pi would pick, so you can check the Pi's numbers. It changes nothing.
 ```
-powershell -ExecutionPolicy Bypass -File .\Check-FlacRatings.ps1 -Path "G:\PlexServerData\Music\MusicFiles"
+powershell -ExecutionPolicy Bypass -File .\Check-FlacRatings.ps1 -Path "D:\Music"
 ```
 Add `-Csv "$HOME\Desktop\ratings.csv"` to also save a per-song list.
 

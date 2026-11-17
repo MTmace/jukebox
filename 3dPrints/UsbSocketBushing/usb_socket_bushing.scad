@@ -12,7 +12,7 @@
 // part = "bushing" | "washer" | "both"
 part = "both";
 
-HOLE_D   = 31.5;   // hole in the panel (measured by Andrew)
+HOLE_D   = 31.5;   // hole in the panel (measured)
 FIT      = 0.1;    // plug is this much smaller than the hole, all round
                    // (same value that fitted the power inlet plate lip)
 PANEL_T  = 2;      // panel thickness (same steel as the power inlet panel)

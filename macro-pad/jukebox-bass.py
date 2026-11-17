@@ -96,7 +96,7 @@ def main():
     from select import select
     E = evdev.ecodes
 
-    db = DEFAULT_DB                      # always start at the default (Andrew 2026-11-17)
+    db = DEFAULT_DB                      # always start at the default (2026-11-17)
     # PipeWire may still be starting at boot: keep trying for a minute
     for _ in range(30):
         if apply(db):

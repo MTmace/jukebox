@@ -32,7 +32,7 @@ const char VERSION[] = "Lights version 11.2 (2026-11-09)";
 const uint8_t  LED_PIN          = 17;    // data wire of the LED strip (Teensy pin 17)
 const uint8_t  NUM_LEDS         = 20;    // numbers on the panel
 const uint8_t  STRIP_LEDS       = 20;    // LEDs on the string or strip (more is fine: extras stay off)
-const uint16_t COLOR_ORDER      = NEO_RGB; // Andrew's ALITOVE WS2811 bullets are RGB (GRB showed white as green)
+const uint16_t COLOR_ORDER      = NEO_RGB; // The ALITOVE WS2811 bullets are RGB (GRB showed white as green)
 const uint8_t  FIRST_ROW_LEN    = 2;
 const uint8_t  FIRST_ROW[FIRST_ROW_LEN] = { 1, 2 };   // numbers printed in row 0, left to right
 const uint8_t  TENS_ROW_LEN     = 8;
@@ -59,7 +59,7 @@ const uint8_t  SELECT_BRIGHT    = 120;   // 0-255, numbers while selecting
 const uint8_t  IDLE_BRIGHT      = 60;    // 0-255, idle twinkle (kept low for USB power)
 const uint8_t  LIT_R = 255, LIT_G = 255, LIT_B = 255;  // white (warmer: 255, 160, 60); ignored by single-colour LEDs
 
-const uint16_t SWEEP_STEP_MS    = 50;    // time per number as the light slides in (was 100; Andrew 2026-10-30)
+const uint16_t SWEEP_STEP_MS    = 50;    // time per number as the light slides in (was 100; 2026-10-30)
 const uint8_t  RUN_IN_FROM      = NUM_LEDS - 1;  // where every key's light starts: 19 = the "9" of the ones
                                          // (far right). 10 = the "0" of the ones.
 const uint16_t HOLD_MS          = 10000; // numbers stay on after the 3rd digit
