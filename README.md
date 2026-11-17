@@ -12,10 +12,9 @@ the jukebox. Audio goes from an InnoMaker HiFi DAC HAT to a bridged Blaupunkt ca
 
 | Folder | What it is | Where it goes on the Pi |
 |---|---|---|
-| `Fruitbox/fruitbox-setup/` | Fruitbox settings (`fruitbox.ini`), the launcher, autostart setup, the genre-folder script and genre map | `/home/mtmace/fruitbox/` |
+| `Fruitbox/fruitbox-setup/` | Fruitbox settings (`fruitbox.ini`), the launcher, screen and autostart setup | `/home/mtmace/fruitbox/` |
 | `Fruitbox/Skins/` | The "Firestar Ultrawide" skin. `Firestar Ultrawide/` is the skin itself; `build_skin.py` and `status_screen.py` generate it | `Firestar Ultrawide/` goes to `/opt/fruitbox/skins/Firestar Ultrawide/` |
-| `library/` | Music library scripts: mount the Windows share, pick the songs, build the genre folders, short strip titles, the nightly update. Start with `SETUP-GUIDE.md` | `/home/mtmace/fruitbox/` |
-| `FlacRatings/` | `check-flacRatings.ps1` and its report, for checking star ratings on Windows | Runs on Windows, not the Pi |
+| `library/` | Music library scripts: mount the Windows share, turn the playlists into categories, short strip titles, the nightly update. Start with `SETUP-GUIDE.md` | `/home/mtmace/fruitbox/` |
 | `arduino/` | Teensy 4.1 program for the Seeburg keypad, coins, buttons and selection lights, plus wiring notes and a beginner guide | Uploaded to the Teensy from the Arduino IDE |
 | `hardware/` | Monitor mounting and volume notes | |
 | `cabinet-lights/` | LED strips around the cabinet that follow what the jukebox is doing, driven straight from a Pi pin by the jukebox bridge | `jukebox-bridge.py` to `/usr/local/bin/`, `jukebox-bridge.ini` to `/home/mtmace/fruitbox/` |
@@ -26,12 +25,6 @@ the jukebox. Audio goes from an InnoMaker HiFi DAC HAT to a bridged Blaupunkt ca
 | `macro-pad/` | The Koolertron macro pad: key and knob settings, and the bass knob service | `/home/mtmace/fruitbox/` |
 | `3dPrints/` | 3D-printable parts: keycaps, Pi and Teensy cases, power inlet plate, status screen frame and more | Printed, not on the Pi |
 | `PARTS.md` | Every part for the build and whether it is bought yet | Not on the Pi |
-
-Some files are in two folders. Keep both copies the same when you change one:
-
-- `genre_library.py` and `genre_map.txt`: `Fruitbox/fruitbox-setup/` and `library/`
-- `strip_titles.py`: `Fruitbox/Skins/` and `library/`
-- The ratings checker: `FlacRatings/check-flacRatings.ps1` and `library/Check-FlacRatings.ps1`
 
 ## Notes
 

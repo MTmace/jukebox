@@ -55,6 +55,6 @@ install -m 755 "$HERE/jukebox_library.py" "$HERE/playlist_library.py" "$HERE/upd
 echo "cron installed:"; crontab -l | grep -e update-jukebox.sh -e "ls $MOUNT"
 
 echo
-echo "Next: preview what would be picked, then do the first build:"
-echo "  python3 $FB/jukebox_library.py --dry-run --list --min-stars 4 --tag grouping=Jukebox | less"
+echo "Next: preview the playlists, then do the first build:"
+echo "  python3 $FB/playlist_library.py --dry-run"
 echo "  $FB/update-jukebox.sh --always && tail $FB/library.log"

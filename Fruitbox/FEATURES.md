@@ -98,7 +98,7 @@ and `Fruitbox/Skins/Firestar Ultrawide/fruitbox.cfg` (main branch, 2026-10-17).
 
 | Feature | Setting or button | Ours |
 |---|---|---|
-| Music folders, searched including sub-folders | `MusicPath` (ini, skin, or command line; command line wins, then skin, then ini) | ✅ set in the ini by `genre_library.py` |
+| Music folders, searched including sub-folders | `MusicPath` (ini, skin, or command line; command line wins, then skin, then ini) | ✅ set in the ini by `playlist_library.py` |
 | Music groups: tag folders with group names, cycle groups with one button (max 30 groups) | `MusicPath = folder = Group name`, button MusicGroup (Right Alt) | ✅ our genre button, groups like "Country (412)" |
 | Include an "All Songs" group, and rename it | ini `MusicGroupIncludeAllSongs`, `MusicGroupAllSongsLabel` | ✅ yes, "All Songs" |
 | Show the current group name | `${MUSIC_GROUP}` | ✅ |

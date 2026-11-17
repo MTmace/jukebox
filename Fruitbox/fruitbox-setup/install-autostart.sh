@@ -12,9 +12,7 @@ FB_HOME="$HOME/fruitbox"
 mkdir -p "$FB_HOME" "$HOME/.config/autostart"
 
 install -m 755 "$HERE/launch-fruitbox.sh" "$FB_HOME/launch-fruitbox.sh"
-install -m 755 "$HERE/genre_library.py"   "$FB_HOME/genre_library.py"
 install -m 755 "$HERE/send-song-codes.py" "$FB_HOME/send-song-codes.py"
-[ -f "$FB_HOME/genre_map.txt" ] || install -m 644 "$HERE/genre_map.txt" "$FB_HOME/genre_map.txt"
 if [ -f "$FB_HOME/fruitbox.ini" ]; then
   echo "keeping existing $FB_HOME/fruitbox.ini"
 else
@@ -38,7 +36,7 @@ KEEPALIVE="*/4 * * * * ls /mnt/music >/dev/null 2>&1"
 
 sudo raspi-config nonint do_boot_behaviour B4   # desktop, auto-login
 sudo raspi-config nonint do_blanking 1          # never blank the screen
-sudo apt-get install -y python3-mutagen         # for genre_library.py
+sudo apt-get install -y python3-mutagen         # for the library scripts
 
-echo "Done. Next: python3 $FB_HOME/genre_library.py --ini $FB_HOME/fruitbox.ini"
-echo "Then reboot. To stop autostart: rm ~/.config/autostart/fruitbox.desktop"
+echo "Done. Next: set up the music share (library/SETUP-GUIDE.md), then reboot."
+echo "To stop autostart: rm ~/.config/autostart/fruitbox.desktop"

@@ -3,9 +3,7 @@
 # PlexMediaToolkit's Jukebox page (the share's _Jukebox folder), then write the
 # title-strip text. Installed to /home/mtmace/fruitbox/.
 #
-# Since 2026-11-04 only songs in a playlist are on the jukebox; ratings and
-# genre_map.txt are no longer used (jukebox_library.py and genre_library.py
-# are kept in the repo for reference but not run).
+# Only songs in a playlist are on the jukebox.
 #
 #   bash /home/mtmace/fruitbox/update-jukebox.sh            normal run
 #   bash /home/mtmace/fruitbox/update-jukebox.sh --always   also rewrite the strip titles when nothing changed
