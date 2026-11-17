@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
-"""Jukebox bridge: Teensy keypad controller + Fruitbox status -> cabinet lights.
+"""Jukebox cabinet lights: drives the LED strips around the cabinet.
 
-Reads two things:
-  - The Teensy's USB serial "E:<event>" lines (key presses, coins, buttons),
-    see arduino/seeburg_keypad. Other lines are ignored.
-  - Fruitbox's state file, written by a hidden [status] box in the skin
-    (playing / idle, attract mode on / off).
-and shows a light pattern to match what the jukebox is doing, either:
-  - on LED strips wired straight to the Pi, one data pin per strip, or
-  - by switching presets on a WLED controller over Wi-Fi.
+Shows a light pattern to match what the jukebox is doing, on LED strips wired
+straight to a Pi pin. It follows:
+  - the jukebox state from the state manager (/dev/shm/jukebox_mode),
+  - the Teensy's USB serial "E:<event>" lines (key presses, coins), for the
+    short selecting / coin flashes (see arduino/seeburg_keypad),
+  - the macro pad's light keys (on/off, dimmer, theme),
+  - the music itself (the strips ride the beat).
+If the state manager isn't running, it falls back to Fruitbox's own state file
+(playing / idle, attract on / off), written by a hidden box in the skin.
 
-Settings: /home/mtmace/fruitbox/jukebox-bridge.ini (see jukebox-bridge.ini).
-Needs: sudo apt install python3-serial python3-evdev pulseaudio-utils (python3-spidev only for SPI pins)
-Test without changing anything: python3 jukebox-bridge.py --dry-run
-Show every theme's patterns on the strips, 6 s each: python3 jukebox-bridge.py --demo
+Settings: /home/mtmace/fruitbox/jukebox-lights.ini (see jukebox-lights.ini).
+Install: sudo bash install-lights.sh (in this folder).
+Test without changing anything: python3 jukebox-lights.py --dry-run
+Show every theme's patterns on the strips, 6 s each: sudo python3 jukebox-lights.py --demo
 """
-VERSION = "1.4"   # bump on every change; the status page shows it
-import argparse, colorsys, configparser, glob, json, math, os, random, signal, sys, threading, time, urllib.request
+VERSION = "2.0"   # bump on every change; the status page shows it
+# 2.0: renamed from jukebox-bridge; the WLED option and the old sleep-file
+#      fallback (jukebox-keys, retired) are removed.
+import argparse, colorsys, configparser, glob, json, math, os, random, signal, sys, threading, time
 
-CONFIG = "/home/mtmace/fruitbox/jukebox-bridge.ini"
+CONFIG = "/home/mtmace/fruitbox/jukebox-lights.ini"
 DEFAULTS = {
     "teensy": {"port": ""},
-    # sleep_file exists while the jukebox sleeps (Pause key, made by jukebox-keys)
-    "fruitbox": {"state_file": "/dev/shm/jukebox_state.txt", "sleep_file": "/dev/shm/jukebox_sleep",
+    "fruitbox": {"state_file": "/dev/shm/jukebox_state.txt",
                  # the jukebox state, one word, from the state manager (jukebox-state)
                  "mode_file": "/dev/shm/jukebox_mode"},
     # strips: the patterned strips, top to bottom (each has a [strip <name>]
@@ -53,9 +55,6 @@ DEFAULTS = {
     "controls": {"off_key": "KEY_SCROLLLOCK KEY_F13", "dim_up_key": "KEY_PAGEUP KEY_F14",
                  "dim_down_key": "KEY_PAGEDOWN KEY_F15", "theme_key": "KEY_INSERT KEY_F16",
                  "dim_step": "10", "preview_seconds": "6"},
-    "wled": {"enabled": "no", "host": "wled-jukebox.local"},
-    "presets": {"idle": "1", "playing": "2", "selecting": "3", "coin": "4",
-                "attract": "5", "sleep": "5", "off": "0"},
     "timing": {"selecting_seconds": "30", "coin_seconds": "3"},
 }
 
@@ -74,7 +73,7 @@ _RESET = bytes(64)   # 80 us of low after a frame tells the LEDs to show it
 # ---- the music, read straight from the Pi's sound output ----------------
 # Fruitbox plays through PipeWire (the Pi desktop's sound system). PipeWire
 # offers a "monitor" of every output: a copy of exactly what goes to the DAC.
-# The bridge records that copy (no microphone), so the lights follow the
+# The lights record that copy (no microphone), so the lights follow the
 # music itself, not the room. AUDIO.bass and AUDIO.level run 0..1, scaled to
 # the music's own loudness (so it works at any Fruitbox volume), and
 # AUDIO.beat_t is the time of the last bass hit.
@@ -152,7 +151,7 @@ def _scale(c, k):
     return tuple(int(x * k) for x in c)
 
 # Each pattern is f(n, t, since, mem) -> list of n (r, g, b) for ONE strip:
-# t = seconds since the bridge started, since = seconds since this pattern
+# t = seconds since the lights started, since = seconds since this pattern
 # began, mem = a dict the pattern can keep between frames (one per strip).
 def pat_off(n, t, since, mem):
     return [(0, 0, 0)] * n
@@ -388,7 +387,7 @@ def scene_duet(ns, t, since, mems):
 
 SCENES = {"flow": scene_flow, "rising": scene_rising, "relay": scene_relay, "duet": scene_duet}
 
-SAVED = "/var/lib/jukebox-bridge/lights.json"   # on/off and dim level, kept across reboots
+SAVED = "/var/lib/jukebox-lights/lights.json"   # on/off and dim level, kept across reboots
 
 RESEND_SECONDS = 10      # a steady picture is sent again this often
 
@@ -726,10 +725,9 @@ def watch_keys(cfg, leds):
             except OSError:                              # unplugged
                 devices.pop(d.path, None)
 
-class Bridge:
+class Lights:
     def __init__(self, cfg, dry_run=False):
         self.cfg, self.dry = cfg, dry_run
-        self.sent_preset = None
         self.flash = None            # (preset, until) for selecting / coin
         self.state_mtime = None
         self.playing = False
@@ -787,7 +785,7 @@ class Bridge:
         # Attract mode itself comes from Fruitbox's state file, which knows
         # whether the button turned it on, off or to another genre.
 
-    # ---- WLED -----------------------------------------------------------
+    # ---- which look to show --------------------------------------------
     def wanted(self):
         # The state manager (jukebox-state) decides the jukebox's state for
         # every part; the lights only show it, in the current theme:
@@ -805,11 +803,7 @@ class Bridge:
                 return self.flash[0]
             self.flash = None
             return {"active": "playing", "attract": "attract"}.get(self.mode, "idle")
-        # No state manager (not installed, or stopped): decide from Fruitbox
-        # and the sleep file as before.
-        if os.path.exists(self.cfg.get("fruitbox", "sleep_file")):
-            self.flash = None
-            return "sleep"
+        # No state manager (not installed, or stopped): decide from Fruitbox.
         if self.flash and time.monotonic() < self.flash[1]:
             return self.flash[0]
         self.flash = None
@@ -818,28 +812,8 @@ class Bridge:
         return "attract" if self.attract_mode else "idle"
 
     def update_lights(self):
-        name = self.wanted()
         if self.leds:
-            self.leds.show(name)
-        if not self.cfg.getboolean("wled", "enabled"):
-            return
-        preset = self.cfg.getint("presets", name)
-        if preset == self.sent_preset:
-            return
-        body = {"on": True, "ps": preset} if preset > 0 else {"on": False}
-        url = f"http://{self.cfg.get('wled', 'host')}/json/state"
-        if self.dry:
-            log("WLED", name, "->", body)
-            self.sent_preset = preset
-            return
-        try:
-            req = urllib.request.Request(url, data=json.dumps(body).encode(),
-                                         headers={"Content-Type": "application/json"})
-            urllib.request.urlopen(req, timeout=2).read()
-            log("WLED", name, "preset", preset)
-            self.sent_preset = preset
-        except OSError as e:
-            log("WLED not reachable:", e)    # try again next time round
+            self.leds.show(self.wanted())
 
     # ---- main loop ------------------------------------------------------
     def handle_line(self, line):
@@ -887,7 +861,7 @@ def main():
         strip.show("off")
         time.sleep(0.5)
         return
-    b = Bridge(cfg, args.dry_run)
+    b = Lights(cfg, args.dry_run)
 
     def stop(signum, frame):               # shutdown, reboot or systemctl stop
         log("stopping: lights off")
@@ -896,9 +870,8 @@ def main():
         sys.exit(0)
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
-    log("jukebox bridge started;",
-        f"{b.leds.n} LEDs on the Pi" if b.leds else "no Pi LEDs",
-        "| WLED at " + cfg.get("wled", "host") if cfg.getboolean("wled", "enabled") else "| WLED off")
+    log(f"jukebox lights {VERSION} started;",
+        f"{b.leds.n} LEDs" if b.leds else "LEDs off in the settings ([leds] enabled = no)")
 
     import serial   # python3-serial
     while True:

@@ -155,7 +155,7 @@ credits, the clock, and so on. Each box reads a small text file of instructions.
 | Per-box timers (blink, scroll speed, one-shot, start delay) | `TimerTickPeriod`, `TimerOneShot`, `TimerStartDelay` | ✅ |
 | Text scrolling for long titles | text mode 1..n | ✅ bar screen Now Playing |
 | Four on/off flags that boxes and buttons can share (for example, a button that shows a hidden panel) | `Flag1`..`Flag4` buttons (F7..F10), `${SET_FLAG_n_HI}`, `${IF_FLAG_n_HI}` | ➖ (could drive a hidden "service" panel) |
-| Write a box's text to a file for other programs to read | `Output = file` | ✅ `/dev/shm/jukebox_state.txt` drives the cabinet lights bridge |
+| Write a box's text to a file for other programs to read | `Output = file` | ✅ `/dev/shm/jukebox_state.txt` drives the cabinet lights |
 | Run once at start-up | `Initial` | ✅ |
 
 ## 8. Second screen and networked screens
@@ -188,7 +188,7 @@ credits, the clock, and so on. Each box reads a small text file of instructions.
 | Feature | Setting or button | Ours |
 |---|---|---|
 | Any button can be a switch wired between a Pi GPIO pin and ground (normally-open or normally-closed, auto-detected) | ini `[buttons]` | ➖ we use the Teensy as a USB keyboard instead |
-| Turn GPIO pins 0-27 on/off from status boxes (lamps, relays, "now playing" lights) | `${SET_GPIO_nn_HI}` / `_LO` | ➖ lights are driven from the Teensy and the WLED bridge |
+| Turn GPIO pins 0-27 on/off from status boxes (lamps, relays, "now playing" lights) | `${SET_GPIO_nn_HI}` / `_LO` | ➖ lights are driven from the Teensy and jukebox-lights |
 | Note: pins used by the DAC HAT (for example GPIO 18 and the other I2S pins) can't be used | | applies to our InnoMaker DAC |
 
 ## 12. Command line options (what the launcher can pass)

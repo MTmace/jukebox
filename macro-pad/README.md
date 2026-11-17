@@ -10,7 +10,7 @@ pad itself.
 |---|---|---|---|---|
 | 1 Volume | `=` | `-` | Left Ctrl (mute) | Fruitbox itself (already set up) |
 | 2 Bass | F17 | F18 | F19 (back to flat) | `jukebox-bass.py` (this folder) |
-| 3 Lights | F14 | F15 | F13 (lights on/off) | `jukebox-bridge.py` (cabinet lights) |
+| 3 Lights | F14 | F15 | F13 (lights on/off) | `jukebox-lights.py` (cabinet lights) |
 
 None of these clash with Fruitbox's keys (F1-F12, letters, digits, arrows,
 Space, Backspace, Delete, Left/Right Alt, Left/Right Ctrl, `;` `'` `[` `]` `,`
@@ -57,8 +57,8 @@ Big bass boosts at a high Fruitbox volume can distort. At the normal volume
 
 ## 3. Lights
 
-Nothing new: the cabinet lights bridge (`cabinet-lights/jukebox-bridge.py`)
-already dims on F14/F15 and switches on/off with F13. It works once the bridge
+Nothing new: the cabinet lights service (`cabinet-lights/jukebox-lights.py`)
+already dims on F14/F15 and switches on/off with F13. It works once it
 is installed on the Pi (see `cabinet-lights/README.md`).
 
 ## 4. Reboot, Rebuild Playlist, Shut Down and Sleep keys

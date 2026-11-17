@@ -18,7 +18,7 @@ the jukebox. Audio goes from an InnoMaker HiFi DAC HAT to a bridged Blaupunkt ca
 | `skin/` | The "Firestar Ultrawide" skin. `Firestar Ultrawide/` is the skin itself; `build_skin.py` and `status_screen.py` generate it | `Firestar Ultrawide/` goes to `/opt/fruitbox/skins/Firestar Ultrawide/` |
 | `library/` | Music library: mount the Windows share, turn the playlists into categories, short strip titles, the nightly update. Start with `SETUP-GUIDE.md` | `/home/mtmace/fruitbox/` |
 | `state-manager/` | Service `jukebox-state`: decides if the jukebox is starting, active, idle, in attract mode or asleep; handles the Sleep, Reboot, Rebuild Playlist and Shut Down keys | `/usr/local/bin/` and a systemd service |
-| `cabinet-lights/` | Service `jukebox-bridge`: the LED strips around the cabinet, driven straight from a Pi pin, following the jukebox's state | `/usr/local/bin/`, settings in `/home/mtmace/fruitbox/` |
+| `cabinet-lights/` | Service `jukebox-lights`: the LED strips around the cabinet, driven straight from a Pi pin, following the jukebox's state | `/usr/local/bin/`, settings in `/home/mtmace/fruitbox/` |
 | `status-page/` | Service `jukebox-status`: the status and control web page (http://jukebox.local) and the F24 on-screen status box | `/usr/local/bin/` and a systemd service |
 | `macro-pad/` | The Koolertron macro pad's key and knob settings, and service `jukebox-bass` (the bass knob) | `/home/mtmace/fruitbox/` and a user service |
 

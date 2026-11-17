@@ -1,18 +1,14 @@
 # Cabinet lights
 
 LED strips around the cabinet, driven straight from the Pi. A small program on the
-Pi (`cabinet-lights/jukebox-bridge.py`) watches what the jukebox is doing and
-plays a matching light pattern on the Pi's pins.
-(It can still drive a WLED controller instead, see the end of this page.)
+Pi (`jukebox-lights.py`, service `jukebox-lights`) follows the jukebox's state
+and plays a matching light pattern on a Pi pin. It was called `jukebox-bridge`
+until version 2.0.
 
 The 22 selection numbers are separate: the Teensy drives those
 (`arduino/SELECTION-LIGHTS.md`).
 
-Status: tested on a PC (the patterns, the signal bytes, the state switching, the
-dimmer and themes, the per-strip scenes, and the beat detection with a test drum
-track). Not yet run on
-the Pi or real strips, the keyboard controls haven't been tried with a real
-keyboard or knob, and the music capture hasn't been tried with Fruitbox.
+Status: running on the jukebox since November 2026.
 
 ## The strips
 
@@ -96,7 +92,7 @@ order, so it doesn't matter which way the data runs.
 **Music:** while a song plays, the cabinet strips follow it. Their brightness
 rides the bass (never below 35 %), the Fire theme throws up a burst of flames on
 every beat, and the VU theme is a music meter. No microphone or sensor is needed:
-the bridge listens to a copy of exactly what the Pi sends to the DAC, so it hears
+the lights listen to a copy of exactly what the Pi sends to the DAC, so it hears
 the whole song, not just the subwoofer, and room noise doesn't count. It adjusts
 to the song's loudness by itself, so it works at any Fruitbox volume. The white
 panel strip never reacts. Turn it off or change it in `[sound]` in the settings.
@@ -117,8 +113,8 @@ the Pi's desktop would change the sound volume too. On/off, brightness and the
 theme are remembered after a restart.
 
 Everything (the patterns per theme, the brightness of each state, the white
-level, the LED counts, the keys) is in `/home/mtmace/fruitbox/jukebox-bridge.ini`.
-New patterns are short Python functions near the top of `jukebox-bridge.py` (ask
+level, the LED counts, the keys) is in `/home/mtmace/fruitbox/jukebox-lights.ini`.
+New patterns are short Python functions near the top of `jukebox-lights.py` (ask
 Claude for one).
 
 ## Parts
@@ -266,51 +262,42 @@ Type these one at a time in the Pi's terminal. The files from this folder go in
    the Pi (`sudo apt update && sudo apt full-upgrade`, then reboot) and try again.
    `dmesg | grep -i ws2812` shows which pins it set up.
 
-3. Install the program, its settings and its service:
+3. Copy this folder to the Pi as `/home/mtmace/fruitbox/cabinet-lights/`, then
+   install the program, its settings and its service:
 
    ```
-   sudo apt install python3-serial python3-evdev pulseaudio-utils
-   sudo cp /home/mtmace/Downloads/jukebox-bridge.py /usr/local/bin/
-   cp /home/mtmace/Downloads/jukebox-bridge.ini /home/mtmace/fruitbox/
-   sudo cp /home/mtmace/Downloads/jukebox-bridge.service /etc/systemd/system/
+   sudo bash /home/mtmace/fruitbox/cabinet-lights/install-lights.sh
    ```
+
+   It keeps your settings file if you already have one (and moves an old
+   `jukebox-lights.ini` to `jukebox-lights.ini` unchanged), and removes the old
+   `jukebox-bridge` service. `install-lights.sh off` removes the service again.
 
 4. Check the strip LED counts, chain order, `reverse`, and colour order in the
    settings:
-   `nano /home/mtmace/fruitbox/jukebox-bridge.ini`
+   `nano /home/mtmace/fruitbox/jukebox-lights.ini`
 
 5. **Test the strips.** This shows every theme's idle, active and attract patterns
    for 6 seconds each, then a coin sparkle, then turns them off:
 
    ```
-   sudo python3 /usr/local/bin/jukebox-bridge.py --demo
+   sudo systemctl stop jukebox-lights
+   sudo python3 /usr/local/bin/jukebox-lights.py --demo
+   sudo systemctl start jukebox-lights
    ```
 
    Red and green swapped? Change `color_order` (GRB to RGB) in the settings.
 
-6. Start it for good (it also starts at every boot):
-
-   ```
-   sudo systemctl enable --now jukebox-bridge
-   ```
-
-If you installed the old `knob-volume` service earlier, turn it off, because only
-one program can read the Teensy at a time:
-
-```
-sudo systemctl disable --now knob-volume
-```
-
 Check it's working (Ctrl+C to stop watching):
 
 ```
-journalctl -u jukebox-bridge -f
+journalctl -u jukebox-lights -f
 ```
 
-You should see `fruitbox: playing` / `idle` and `LEDs playing -> fire` lines as
-songs start and stop, an `event:` line for every key press, and
+You should see `jukebox state: active` / `idle` and `LEDs playing -> fire` lines as
+the state changes, an `event:` line for every key press, and
 `sound: listening to the Pi's output`. After changing the settings:
-`sudo systemctl restart jukebox-bridge`.
+`sudo systemctl restart jukebox-lights`.
 
 If the lights don't move with the music, check that the Pi can hear its own
 output while a song plays (Ctrl+C to stop; it should print a stream of
@@ -339,10 +326,3 @@ ATTRACT_ON or ATTRACT_OFF
 
 `build_skin.py` writes both, so they survive a skin rebuild. To check it on the
 Pi while Fruitbox runs: `cat /dev/shm/jukebox_state.txt`.
-
-## Optional: WLED instead
-
-The bridge can also switch presets on a WLED controller (an ESP32 on Wi-Fi). Flash
-WLED from **install.wled.me**, set its mDNS name to `wled-jukebox`, make presets 1
-to 5 (idle, playing, selecting, coin, attract), then in the settings set
-`[wled] enabled = yes` and `[leds] enabled = no`.

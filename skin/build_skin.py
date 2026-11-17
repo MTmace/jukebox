@@ -733,7 +733,7 @@ def write_cfg():
     a(f"Sound = {RECORD_WAV} 100")
     a("")
     a("# ---- jukebox state for the cabinet lights: not drawn (no Size), written to a")
-    a("# file in memory that cabinet-lights/jukebox-bridge.py reads to pick WLED presets ----")
+    a("# file in memory that cabinet-lights/jukebox-lights.py reads ----")
     a("[status]")
     a("Position = 0 0")
     a("TimerTickPeriod = 1 second")
@@ -765,7 +765,7 @@ STATUS_FILES = {
     # every sound also stays silent while Fruitbox is muted (Mute = Left Ctrl)
     "button_press.txt": "${IF_ANY_BUTTON_PRESSED}${IF_NOT_SONG_PLAYING}${IF_NOT_MUTE}${PLAY_SOUND}",
     "record_start.txt": "${IF_SONG_LOADING}${IF_NOT_MUTE}${PLAY_SOUND}",
-    # read by cabinet-lights/jukebox-bridge.py (cabinet lights); one condition per line
+    # read by cabinet-lights/jukebox-lights.py (cabinet lights); one condition per line
     "lights_state.txt": (
         "${IF_SONG_PLAYING}PLAYING${ELSE}IDLE\n"
         "${IF_ATTRACT_PLAYING}ATTRACT_SONG${ELSE}USER_SONG\n"

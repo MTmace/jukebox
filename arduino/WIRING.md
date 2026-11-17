@@ -198,7 +198,7 @@ and types Fruitbox's `VolUp` (`=`) and `VolDown` (`-`) keys
 Teensy.
 
 The Teensy still sends an `E:` line over its USB cable for every key, coin and
-button; `cabinet-lights/jukebox-bridge.py` on the Pi uses those for the cabinet
+button; `cabinet-lights/jukebox-lights.py` on the Pi uses those for the cabinet
 lights.
 
 **Encoder (off by default, spare option).** If you would rather have a rotary encoder that

@@ -1,0 +1,13 @@
+# Jukebox cabinet lights. Install: sudo bash install-lights.sh (see README.md)
+[Unit]
+Description=Jukebox cabinet lights (LED strips follow the jukebox state, keys and music)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/jukebox-lights.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

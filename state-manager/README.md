@@ -22,7 +22,7 @@ Nothing else decides idle, active, attract or sleep on its own any more:
 
 | Part | Reads | Shows |
 | --- | --- | --- |
-| Cabinet lights (`jukebox-bridge.py` 1.2+) | `/dev/shm/jukebox_mode` | idle look (starting, idle), active look, attract look, sleep look, off (shutdown). Key and coin events still flash the selecting / coin looks while awake. |
+| Cabinet lights (`jukebox-lights.py`) | `/dev/shm/jukebox_mode` | idle look (starting, idle), active look, attract look, sleep look, off (shutdown). Key and coin events still flash the selecting / coin looks while awake. |
 | Status page (`jukebox-status.py`) | `/dev/shm/jukebox_mode` | the Jukebox state row and Lights showing |
 | Keypad Teensy | "S" / "A" sent by jukebox-state on sleep / wake | the waking press isn't used as a digit |
 
@@ -63,7 +63,7 @@ group, or if no group starts with that name (after one trip round, back where it
 started). Pressing another playlist key meanwhile re-aims it. While asleep the
 press only wakes the jukebox. Names are in `PLAYLIST_KEYS` at the top of
 `jukebox-state.py`. Before 1.2 these keys picked favourite light themes in the
-cabinet-light bridge.
+cabinet lights (jukebox-lights).
 
 Settings are at the top of `jukebox-state.py` (ACTIVE_SECONDS = 60, SLEEP_MINUTES = 10,
 CONFIRM_SECONDS = 5).

@@ -36,7 +36,7 @@ Signal path: **Pi 5 -> InnoMaker HiFi DAC HAT (PCM5122, RCA out, 2.1 Vrms) -> NA
 
 Bonus: Fruitbox's on-screen volume bar follows the knob, because Fruitbox itself does the volume.
 
-The older plan (the stock pot wired to the Teensy, read by `jukebox-bridge.py`) is retired. The Teensy no longer sends `V:` lines, so the bridge just leaves the DAC volume alone.
+The older plan (the stock pot wired to the Teensy, read by the Pi) is retired.
 
 **Simplest fallback (no software):** use the NAD's own volume knob, or a 10 kOhm dual-gang log pot between the DAC's RCA out and the NAD. Use shielded cable and ground the shield at the NAD end only.
 

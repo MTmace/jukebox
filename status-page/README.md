@@ -15,13 +15,13 @@ A troubleshooting page that shows everything the jukebox is set to, in one place
 | Things to check | Plain-English warnings: Fruitbox not running or frozen, muted, paused, DAC missing, bass output not in use, lights switched off, a service stopped, music share not connected, Pi hot or short of power, USB drive full, screens asleep, no network |
 | Playing | Jukebox state (with a link to a page explaining each state), Song and artist, genre/playlist, songs in queue, attract mode, credits, songs in library |
 | Sound | Fruitbox volume (0 to MaxVolume) and mute, volume step and start volume from fruitbox.ini, bass now (dB) with its start level and range, DAC Digital level, the Pi's output volume, which sound output is in use |
-| Lights | On/off, brightness, theme, favourites 1/2/3, which look the lights show (from the jukebox state), idle, sleep and white levels; link to a Light themes page (what each theme shows in each state, read from the installed jukebox-bridge.ini comments) |
+| Lights | On/off, brightness, theme, favourites 1/2/3, which look the lights show (from the jukebox state), idle, sleep and white levels; link to a Light themes page (what each theme shows in each state, read from the installed jukebox-lights.ini comments) |
 | Screens | Skin, each screen's size, position and rotation, screens on or asleep |
 | Network | Name, IP address, WiFi name and signal, page address |
 | Pi | Temperature, power/heat warnings (under-voltage), 5 V supply voltage, uptime, free space |
-| Services | jukebox-bridge, jukebox-state, jukebox-status, jukebox-bass, Fruitbox: running, starts at boot, and the installed version (the script's VERSION line, file, install date, and an id matching `git hash-object` of the repo file); Fruitbox package version |
+| Services | jukebox-lights, jukebox-state, jukebox-status, jukebox-bass, Fruitbox: running, starts at boot, and the installed version (the script's VERSION line, file, install date, and an id matching `git hash-object` of the repo file); Fruitbox package version |
 | Music and devices | Music share, playlist folders, keypad Teensy, LED pins, USB devices |
-| Settings files | fruitbox.ini, jukebox-bridge.ini, config.txt, cmdline.txt (click to open) |
+| Settings files | fruitbox.ini, jukebox-lights.ini, config.txt, cmdline.txt (click to open) |
 | Recent log lines | launcher.log, fruitbox.log, and each service's log (click to open) |
 
 Volume, song, genre and skin only exist inside Fruitbox. The installer adds one hidden
@@ -108,7 +108,7 @@ The page has no copies of settings of its own. Volume figures come from
 fruitbox.ini; the bass start level and range from the `DEFAULT_DB`, `MIN_DB`,
 `MAX_DB` lines of the installed jukebox-bass.py; the times on the states page
 (`ACTIVE_SECONDS`, `SLEEP_MINUTES`, `CONFIRM_SECONDS`) from the installed
-jukebox-state.py; light levels and themes from jukebox-bridge.ini. Change the
+jukebox-state.py; light levels and themes from jukebox-lights.ini. Change the
 file, restart that service, and the page follows (a "?" means it couldn't read it).
 
 ## Control page (1.4)

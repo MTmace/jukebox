@@ -6,7 +6,9 @@
   On screen:  macro pad key F24 shows a summary on the main screen for 30 s
               (press it again to close it early). See jukebox-status-overlay.py.
 
-Read only: nothing on the page can change the jukebox.
+The status page only shows; changes are on the separate Control page
+(http://jukebox.local/control): state buttons and start / stop / restart for
+the jukebox services.
 
 Where each value comes from
   Fruitbox volume, mute, pause, song, genre, queue, credits, skin
@@ -16,9 +18,9 @@ Where each value comes from
   Bass                            /dev/shm/jukebox_bass.txt or ~/.config/jukebox-bass/level
   Pi output volume, sound output  wpctl (PipeWire)
   DAC level                       amixer -c BossDAC
-  Lights on/off, brightness, theme  /var/lib/jukebox-bridge/lights.json
-  Lights settings                 /home/mtmace/fruitbox/jukebox-bridge.ini
-  Lights showing                  /dev/shm/jukebox_mode (same mapping as the bridge)
+  Lights on/off, brightness, theme  /var/lib/jukebox-lights/lights.json
+  Lights settings                 /home/mtmace/fruitbox/jukebox-lights.ini
+  Lights showing                  /dev/shm/jukebox_mode (same mapping as jukebox-lights)
   Jukebox state (state manager)   /dev/shm/jukebox_mode
   Screens                         xrandr, xset
   Network                         hostname -I, nmcli, /proc/net/wireless
@@ -27,7 +29,8 @@ Where each value comes from
 Runs as mtmace (systemd service jukebox-status). Log: journalctl -u jukebox-status -f
 Test by hand:  python3 /usr/local/bin/jukebox-status.py --print
 """
-VERSION = "1.4"   # bump on every change; the status page shows it
+VERSION = "1.5"   # bump on every change; the status page shows it
+# 1.5: the cabinet lights service is now jukebox-lights (was jukebox-bridge).
 
 import configparser, html, json, os, re, shutil, socket, subprocess, sys, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -38,8 +41,12 @@ FRUITBOX_INI = FB + "/fruitbox.ini"
 FRUITBOX_FILE = "/dev/shm/jukebox_fruitbox.txt"
 LIGHTS_STATE = "/dev/shm/jukebox_state.txt"
 JUKEBOX_MODE = "/dev/shm/jukebox_mode"      # written by jukebox-state (state manager)
-BRIDGE_INI = FB + "/jukebox-bridge.ini"
-BRIDGE_SAVED = "/var/lib/jukebox-bridge/lights.json"
+# Cabinet lights (jukebox-lights). Until install-lights.sh has run, the files
+# still have the old jukebox-bridge names, so use those if the new ones are missing.
+def _either(new, old):
+    return new if os.path.exists(new) or not os.path.exists(old) else old
+LIGHTS_INI = _either(FB + "/jukebox-lights.ini", FB + "/jukebox-bridge.ini")
+LIGHTS_SAVED = _either("/var/lib/jukebox-lights/lights.json", "/var/lib/jukebox-bridge/lights.json")
 BASS_SHOW = "/dev/shm/jukebox_bass.txt"
 BASS_SAVED = HOME + "/.config/jukebox-bass/level"
 CONFIG_TXT = "/boot/firmware/config.txt"
@@ -172,13 +179,13 @@ def sound():
 def lights():
     d = {"on": None, "brightness": None, "theme": None}
     try:
-        s = json.loads(read(BRIDGE_SAVED) or "{}")
+        s = json.loads(read(LIGHTS_SAVED) or "{}")
         d.update(on=s.get("on"), brightness=s.get("brightness"), theme=s.get("theme"))
     except ValueError:
         pass
     cfg = configparser.ConfigParser(inline_comment_prefixes=("#",))
     try:
-        cfg.read_string(read(BRIDGE_INI))
+        cfg.read_string(read(LIGHTS_INI))
     except configparser.Error:
         pass
     g = lambda sec, key: cfg.get(sec, key, fallback="")
@@ -480,7 +487,7 @@ def logs():
 
 
 def files():
-    return {FRUITBOX_INI: ini_lines(FRUITBOX_INI), BRIDGE_INI: ini_lines(BRIDGE_INI),
+    return {FRUITBOX_INI: ini_lines(FRUITBOX_INI), LIGHTS_INI: ini_lines(LIGHTS_INI),
             CONFIG_TXT: ini_lines(CONFIG_TXT), CMDLINE_TXT: [read(CMDLINE_TXT).strip()]}
 
 
@@ -673,7 +680,7 @@ tr.hero td.lv-warn{color:var(--warn)}.more{font-size:15px;font-weight:400;letter
 """
 
 
-# Which look the light bridge (v1.2+) shows for each jukebox state.
+# Which look the cabinet lights show for each jukebox state.
 LIGHT_LOOK = {"active": "active look", "idle": "idle look", "starting": "idle look",
               "attract": "attract look", "sleep": "sleep look", "shutdown": "off"}
 
@@ -745,8 +752,8 @@ def states_page():
     return "".join(out)
 
 
-# Plain words for the bridge's patterns, used when the installed ini has no
-# description comments (older bridge ini).
+# Plain words for the light patterns, used when the installed ini has no
+# description comments (older ini).
 PATTERN_TEXT = {
     "white": "steady white", "candle": "warm candle flicker",
     "fire": "flames rising along each strip, pulsing with the bass",
@@ -763,15 +770,15 @@ PATTERN_TEXT = {
 
 
 def read_themes():
-    """Themes from the installed bridge ini: [(name, key, patterns, [(state, text)])], notes.
+    """Themes from the installed lights ini: [(name, key, patterns, [(state, text)])], notes.
 
     The ini documents each theme in comments right above its line:
         # Fire
         #   idle:     warm candle flicker, 20 %
         fire = candle fire aurora
-    so this page always matches the bridge that is installed."""
+    so this page always matches the lights that are installed."""
     themes, notes, block, in_themes, order = [], [], [], False, []
-    for raw in read(BRIDGE_INI).splitlines():
+    for raw in read(LIGHTS_INI).splitlines():
         ln = raw.strip()
         if ln.startswith("["):
             in_themes = ln.lower() == "[themes]"
@@ -832,13 +839,13 @@ def themes_page():
            "</span></header><main class=states>"]
     if not themes:
         out.append(f"<section class=wide><h2>No themes found</h2><p>Couldn't read the [themes] section of "
-                   f"{e(BRIDGE_INI)}.</p></section>")
+                   f"{e(LIGHTS_INI)}.</p></section>")
     shown_parked = False
     for title, key, pats, looks, parked in themes:
         if parked and not shown_parked:
             shown_parked = True
             out.append("<section class=wide><h2>Parked themes</h2><p>Not in the theme key's list "
-                       "(the order line in jukebox-bridge.ini), so the theme key skips them.</p></section>")
+                       "(the order line in " + e(os.path.basename(LIGHTS_INI)) + "), so the theme key skips them.</p></section>")
         cur = key.lower() == now
         mode = read(JUKEBOX_MODE).strip()
         mode = {"starting": "startup"}.get(mode, mode)

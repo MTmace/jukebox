@@ -40,7 +40,7 @@ written by the status page's hidden skin box) until it is the one wanted. If it
 can't read the group, or Fruitbox stops changing it, or the playlist isn't
 there, it stops and logs why: never more than one trip round the groups.
 
-Replaces jukebox-keys.py and screen-sleep.sh. The cabinet lights (bridge 1.2+)
+Replaces jukebox-keys.py and screen-sleep.sh. The cabinet lights (jukebox-lights)
 and the status page read /dev/shm/jukebox_mode; the old /dev/shm/jukebox_sleep
 is no longer made (any left over is removed). It tells the keypad Teensy "S" /
 "A" on sleep / wake, so the waking press isn't used as a digit.
