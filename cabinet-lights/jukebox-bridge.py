@@ -15,8 +15,8 @@ Needs: sudo apt install python3-serial python3-evdev pulseaudio-utils (python3-s
 Test without changing anything: python3 jukebox-bridge.py --dry-run
 Show every theme's patterns on the strips, 6 s each: python3 jukebox-bridge.py --demo
 """
-VERSION = "1.3"   # bump on every change; the status page shows it
-import argparse, colorsys, configparser, glob, json, math, os, random, threading, time, urllib.request
+VERSION = "1.4"   # bump on every change; the status page shows it
+import argparse, colorsys, configparser, glob, json, math, os, random, signal, sys, threading, time, urllib.request
 
 CONFIG = "/home/mtmace/fruitbox/jukebox-bridge.ini"
 DEFAULTS = {
@@ -536,7 +536,26 @@ class LedStrip:
             if len(idx) > 1:
                 log(dev, "chain:", " -> ".join(allnames[k] for k in idx))
             self.pins.append((out, idx))
+        self.stopped = False
         threading.Thread(target=self.run, daemon=True).start()
+
+    def blank(self):
+        """Turn every strip off and stop animating. Called when the service
+        stops (the Pi shutting down or rebooting, or systemctl stop): the
+        strips have their own power supply and would otherwise keep showing
+        the last frame after the Pi is off."""
+        self.stopped = True
+        time.sleep(2 * self.period)        # let a frame being sent finish
+        for out, idx in self.pins:
+            if out and out.fd is not None:
+                for _ in range(2):         # twice, in case a bit is misread
+                    try:
+                        os.pwrite(out.fd, bytes(4 * out.leds), 0)
+                    except OSError:
+                        pass
+                    time.sleep(0.02)
+            elif out:
+                out.send([(0, 0, 0)] * out.leds)
 
     # ---- on/off and dimming (from the keyboard or knob) ----------------
     def load(self):
@@ -642,11 +661,11 @@ class LedStrip:
 
     def run(self):
         t0 = time.monotonic()
-        while True:
+        while not self.stopped:
             now = time.monotonic()
             parts = self.colors(now, t0)
             for out, idx in self.pins:
-                if out:
+                if out and not self.stopped:
                     try:
                         out.send([c for k in idx for c in parts[k]])
                     except OSError as e:
@@ -869,6 +888,14 @@ def main():
         time.sleep(0.5)
         return
     b = Bridge(cfg, args.dry_run)
+
+    def stop(signum, frame):               # shutdown, reboot or systemctl stop
+        log("stopping: lights off")
+        if b.leds:
+            b.leds.blank()
+        sys.exit(0)
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
     log("jukebox bridge started;",
         f"{b.leds.n} LEDs on the Pi" if b.leds else "no Pi LEDs",
         "| WLED at " + cfg.get("wled", "host") if cfg.getboolean("wled", "enabled") else "| WLED off")
