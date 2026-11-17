@@ -46,7 +46,7 @@ try:
 except ImportError:
     sys.exit("mutagen is missing: sudo apt install python3-mutagen")
 
-# Same list as Fruitbox/fruitbox-setup/genre_library.py (Fruitbox v3 "Supported Media formats").
+# Same list as Fruitbox v3 supports (Fruitbox v3 "Supported Media formats").
 MEDIA_EXT = {
     ".aac", ".aiff", ".alac", ".flac", ".m4a", ".m4b", ".mp3", ".mid", ".mpa",
     ".ogg", ".opus", ".pcm", ".wav", ".wma",

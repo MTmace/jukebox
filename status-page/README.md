@@ -74,7 +74,7 @@ After a change: `sudo systemctl restart jukebox-status`.
 | `jukebox_status.txt` | the skin folder (what Fruitbox writes out) |
 | `install-status.sh` | runs from `/home/mtmace/fruitbox/status-page/` |
 
-If the skin is rebuilt with `Fruitbox/Skins/build_skin.py`, the hidden box is already included.
+If the skin is rebuilt with `skin/build_skin.py`, the hidden box is already included.
 
 ## Normal ranges
 

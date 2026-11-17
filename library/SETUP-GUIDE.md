@@ -1,7 +1,7 @@
 # Jukebox music library: step-by-step setup
 
 About 30 minutes. You need the Windows PC that shares the music and the Pi, both on the
-same network. Do the Fruitbox setup (`../Fruitbox/fruitbox-setup/README.md`) first, or along with step 4.
+same network. Do the Fruitbox setup ([`../fruitbox/README.md`](../fruitbox/README.md)) first, or along with step 4.
 
 ---
 
@@ -34,7 +34,7 @@ whoami
 
 On the Windows PC, download the repo from GitHub (github.com/MTmace/Jukebox, green
 **Code** button, **Download ZIP**) and unzip it. Make a folder called `jukebox-setup` and copy
-in the repo's `Fruitbox\fruitbox-setup` folder (renamed to `fruitbox`) and its `library`
+in the repo's `fruitbox` folder and its `library`
 folder, so it looks like this:
 
 ```

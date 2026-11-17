@@ -6,7 +6,7 @@ plays a matching light pattern on the Pi's pins.
 (It can still drive a WLED controller instead, see the end of this page.)
 
 The 22 selection numbers are separate: the Teensy drives those
-(`selection-lights/README.md`).
+(`arduino/SELECTION-LIGHTS.md`).
 
 Status: tested on a PC (the patterns, the signal bytes, the state switching, the
 dimmer and themes, the per-strip scenes, and the beat detection with a test drum

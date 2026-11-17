@@ -19,7 +19,7 @@
     on the Pi (cabinet-lights/) turns these into WLED presets.
   - Volume is not handled here: the knob on the USB macro pad types Fruitbox's
     VolUp (=) / VolDown (-) keys directly. The stock Seeburg knob is not used.
-  - Lights the 23 selection numbers (lights.h, see selection-lights/README.md).
+  - Lights the 23 selection numbers (lights.h, see arduino/SELECTION-LIGHTS.md).
   - Screen sleep: when the Pi turns the screens off at night it sends "S"
     (screen-sleep.sh). The next keypad press then only wakes the screens
     (it types Shift, which Fruitbox ignores) and is not used as a digit.

@@ -31,7 +31,7 @@ Signal path: **Pi 5 -> InnoMaker HiFi DAC HAT (PCM5122, RCA out, 2.1 Vrms) -> NA
    - Turn anticlockwise: `-` (Fruitbox `VolDown`)
    - Press the knob: `Left Ctrl` (Fruitbox `Mute`)
    The settings are saved in the pad, so it keeps them when you move it to the Pi.
-2. Fruitbox already listens for those keys (`Fruitbox/fruitbox-setup/fruitbox.ini`: `VolUp = KBD0 =`, `VolDown = KBD0 -`, `Mute = KBD0 Left Ctrl`). Each click moves the volume by `SongVolumeStep` (set to 5, so 20 clicks from silent to full), and the volume starts at `SongVolume = 30` after each boot.
+2. Fruitbox already listens for those keys (`fruitbox/fruitbox.ini`: `VolUp = KBD0 =`, `VolDown = KBD0 -`, `Mute = KBD0 Left Ctrl`). Each click moves the volume by `SongVolumeStep` (set to 5, so 20 clicks from silent to full), and the volume starts at `SongVolume = 30` after each boot.
 3. Set the DAC to a fixed level once and leave it (`alsamixer`, press F6, pick the HiFi DAC, set `Digital` to about 90%, then `sudo alsactl store` so it sticks). Set the NAD's own knob so full Fruitbox volume is as loud as you'd ever want.
 
 Bonus: Fruitbox's on-screen volume bar follows the knob, because Fruitbox itself does the volume.

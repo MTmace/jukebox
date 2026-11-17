@@ -813,7 +813,7 @@ def main():
     status_screen.make_files(sys.modules[__name__])
     # status page values (same text as status-page/jukebox_status.txt, plus the skin name)
     here = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(here, "..", "..", "status-page", "jukebox_status.txt")) as src, \
+    with open(os.path.join(here, "..", "status-page", "jukebox_status.txt")) as src, \
             open(os.path.join(OUT, "jukebox_status.txt"), "w") as fh:
         fh.write("SKIN=" + os.path.basename(os.path.normpath(OUT)) + "\n" + src.read())
     write_cfg()

@@ -7,7 +7,7 @@ so these are lit by a new **addressable LED strip** driven by the same Teensy 4.
 that reads the keypad. The code is `arduino/seeburg_keypad/lights.h`, part of the
 main keypad program.
 
-All parts for the whole jukebox are tracked in [`PARTS.md`](../PARTS.md).
+All parts for the whole jukebox are tracked in [`PARTS.md`](../PARTS.md). The printed panel that holds the lamps is in [`3dPrints/LampPanel/`](../3dPrints/LampPanel/README.md).
 
 Status: planning. The code compiles for the Teensy 4.1 but has not run on real
 LEDs yet. Waiting on a photo of the panel's back.

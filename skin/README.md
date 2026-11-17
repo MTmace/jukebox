@@ -52,7 +52,7 @@ sudo rm -r /opt/fruitbox/skins/Firestar
 ```
 
 Then set `SKIN="/opt/fruitbox/skins/Firestar Ultrawide/fruitbox.cfg"` in `launch-fruitbox.sh`
-(in `Fruitbox/fruitbox-setup`), or pick "Firestar Ultrawide" in the skin chooser.
+(in `fruitbox/`), or pick "Firestar Ultrawide" in the skin chooser.
 
 The skin chooser shows `Firestar Ultrawide/screenshot.jpg` (1920x1080, the same as Fruitbox's
 stock skins) as its preview picture. `build_skin.py` leaves it alone. After a layout

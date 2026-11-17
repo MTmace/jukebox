@@ -7,8 +7,8 @@ source, so this list is limited to what the author documents plus what we found 
 testing on the Pi and in the emulator.
 
 **The "Ours" column** shows whether our Firestar jukebox uses it today, based on the
-repo files `Fruitbox/fruitbox-setup/fruitbox.ini`, `Fruitbox/fruitbox-setup/launch-fruitbox.sh`
-and `Fruitbox/Skins/Firestar Ultrawide/fruitbox.cfg` (main branch, 2026-10-17).
+repo files `fruitbox/fruitbox.ini`, `fruitbox/launch-fruitbox.sh`
+and `skin/Firestar Ultrawide/fruitbox.cfg` (main branch, 2026-10-17).
 
 - ✅ = we use it
 - ➖ = available, we don't use it
