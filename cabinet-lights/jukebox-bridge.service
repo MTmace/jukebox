@@ -1,0 +1,13 @@
+# Install: see cabinet-lights/README.md ("Set up the Pi")
+[Unit]
+Description=Jukebox bridge (Teensy keypad controller + Fruitbox -> cabinet lights)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/jukebox-bridge.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

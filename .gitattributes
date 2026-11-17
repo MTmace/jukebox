@@ -1,0 +1,16 @@
+# Keep Linux line endings on everything the Pi runs or reads,
+# even when the repo is checked out on Windows.
+*.sh   text eol=lf
+*.py   text eol=lf
+*.ini  text eol=lf
+*.cfg  text eol=lf
+*.txt  text eol=lf
+*.service text eol=lf
+*.ino  text eol=lf
+*.ps1  text eol=crlf
+*.png  binary
+*.jpg  binary
+*.wav  binary
+*.ttf  binary
+*.stl  binary
+*.zip  binary

@@ -1,0 +1,17 @@
+# Jukebox status page (http://jukebox.local) and the F24 on-screen status box.
+# Install: sudo bash /home/mtmace/fruitbox/status-page/install-status.sh
+[Unit]
+Description=Jukebox status page and F24 status box
+After=network-online.target
+
+[Service]
+User=mtmace
+ExecStart=/usr/bin/python3 /usr/local/bin/jukebox-status.py
+Environment=DISPLAY=:0 XAUTHORITY=/home/mtmace/.Xauthority XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+# lets it use port 80, so the address needs no :8080
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

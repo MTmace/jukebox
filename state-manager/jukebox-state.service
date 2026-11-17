@@ -1,0 +1,12 @@
+# Install: sudo bash /home/mtmace/fruitbox/state-manager/install-state.sh
+[Unit]
+Description=Jukebox state manager (idle, active, attract, sleep; service keys F20 F21 F22 Pause)
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/jukebox-state.py
+Restart=always
+RestartSec=2
+User=root
+
+[Install]
+WantedBy=multi-user.target

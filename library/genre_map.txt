@@ -1,0 +1,47 @@
+# Genre map for genre_library.py: exactly Andrew's genre list (genres.json
+# from his library manager), nothing added. One group per top-level genre;
+# its sub-genres and alternate names are the tag values that go in it.
+#
+# Each line:   Group Name = tag value, tag value, ...
+# Matching is case-insensitive. Line order = the order the genre button steps
+# through, and the priority for songs with several genres (Country first).
+# Grunge is listed under Rock only (it also appears as its own genre in the list).
+#
+# Where a song goes:
+#   1. Its genre is on a line below      -> that line's group.
+#   2. Its genre contains a group name as a word ("Country Pop", "Neo Soul")
+#                                        -> that group (Soul is on the R&B line).
+#   3. Its genre matches nothing         -> keeps its own name; its own group if
+#                                           10+ songs share it, otherwise "Other".
+#   4. No genre tag at all               -> "Other".
+#   5. A genre on the Exclude line       -> left off the jukebox completely.
+# Every song except excluded ones is also in "All Songs".
+#
+# After editing this file run:
+#   bash /home/mtmace/fruitbox/update-jukebox.sh --always
+# then reboot. No need to delete anything first.
+
+Country           = Classic Country, Contemporary Country, Country Rock
+Alternative
+Blues
+Christian         = Gospel, Contemporary Christian
+Classical
+Electronic        = Techno
+Folk              = Bluegrass
+Hip Hop           = Hip-Hop
+Jazz              = Vocal Jazz, Swing, Smooth Jazz
+Metal             = Heavy Metal
+Pop               = Indie Pop, K-Pop
+R&B               = Soul, Funk
+Reggae
+Rock              = Soft Rock, Classic Rock, Hard Rock, Alternative Rock, Indie Rock, Grunge, Punk Rock, Pop Rock, 80's Rock, Psychedelic Rock
+Soundtrack
+New Age
+Easy Listening
+Other             = Instrumental
+Acoustic
+Singer Songwriter = Singer-songwriter, Singer-song-writer, Singer Song-writer
+Ballad
+Oldies            = Rock & Roll, Rock and Roll
+
+Exclude           = Christmas, Holiday

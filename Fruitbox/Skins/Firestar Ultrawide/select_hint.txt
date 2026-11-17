@@ -1,0 +1,1 @@
+${IF_INVALID_CHOICE}No such selection${ELSE}${IF_DUPLICATE_CHOICE}Already in the queue${ELSE}${IF_PLAYQUEUE_FULL}Queue full${ELSE}${IF_FREEPLAY}Enter a 3-digit number${ELSE}${IF_NO_CREDITS}Insert coin${ELSE}${SONGS_CREDITED} plays credited

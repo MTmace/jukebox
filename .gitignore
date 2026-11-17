@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.tmp
+fruitbox.db
+Thumbs.db
+desktop.ini
