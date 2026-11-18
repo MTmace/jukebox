@@ -264,6 +264,36 @@ def save_tags(cache_file, files):
     os.replace(tmp, cache_file)
 
 
+# A bracketed note that marks a remix, live take or other variant, e.g.
+# "(Club Mix)", "('91 Remix)", "[studio version]". "(Album Version)" and
+# "(Original Version)" are the normal take, so they don't count.
+VARIANT_RE = re.compile(r"[\(\[][^\)\]]*\b(remix|mix|edit|version|live|demo|acoustic|"
+                        r"instrumental|extended|radio|remaster(ed)?|re-?recorded|alt\.?|"
+                        r"alternate|bonus)\b[^\)\]]*[\)\]]", re.I)
+NORMAL_RE = re.compile(r"[\(\[]\s*(album|original|lp)\s+version\s*[\)\]]", re.I)
+YEAR_RE = re.compile(r"\b(1[89]\d\d|20\d\d)\b")
+YEAR_FIELDS = ("originaldate", "originalyear", "tdor", "date", "year", "tdrc", "tyer", "\xa9day")
+
+
+def release_year(path):
+    """Earliest year in the song's date tags, or 9999 if it has none.
+    Only read for songs with duplicates, so it isn't kept in the tag cache."""
+    _, fields = read_tags(path)
+    years = [int(m.group(1)) for k in YEAR_FIELDS for v in fields.get(k, [])
+             for m in [YEAR_RE.search(str(v))] if m]
+    return min(years) if years else 9999
+
+
+def version_rank(path, rel, fields):
+    """Lower is better when the same song is on several albums: studio album,
+    then single, then compilation, then live; among those, a plain title
+    before a remix / edit / other version; then the oldest release; then the
+    folder name (so the choice is the same every night)."""
+    title = str((fields.get("title") or [""])[0])
+    variant = bool(VARIANT_RE.search(title)) and not NORMAL_RE.search(title)
+    return (version_kind(rel, fields), variant, release_year(path), rel)
+
+
 def is_excluded(fields, words):
     genres = " ".join(str(g) for g in fields.get("genre", [])).lower()
     return any(w in genres for w in words)
@@ -361,7 +391,7 @@ def main():
         for k, paths in by_key.items():
             if len(paths) < 2:
                 continue
-            best = min(paths, key=lambda p: (version_kind(rel_of[p], tags[p]), rel_of[p]))
+            best = min(paths, key=lambda p: version_rank(p, rel_of[p], tags[p]))
             bkind = KIND_NAMES[version_kind(rel_of[best], tags[best])]
             for p in paths:
                 if p == best:

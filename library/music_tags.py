@@ -160,7 +160,7 @@ LIVE_RE = re.compile(r"(\blive (at|in|from|on|and|for)\b|[\(\[]\s*live\b|-\s*liv
                      r"\blive\s*[\)\]!]|^\s*live\s*$|\blive\s*$|\bunplugged\b|"
                      r"\bin concert\b|\bon stage\b|\bbootleg\b)", re.I)
 HITS_RE = re.compile(r"\b(greatest|hits|best of|very best|essential|essentials|"
-                     r"collection|anthology|gold|platinum|number ones|#1s|no\.? ?1s|"
+                     r"collection|anthology|gold|platinum|number ones|#1s|no\.? ?1s|decades?|"
                      r"definitive|ultimate|retrospective|icon|playlist|"
                      r"now that'?s what|various artists|soundtrack)\b", re.I)
 SINGLE_RE = re.compile(r"(\bsingles?\b|\s-\s(single|ep)$|\((single|ep)\)$)", re.I)
