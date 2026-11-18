@@ -51,10 +51,12 @@ install -m 644 -o mtmace -g mtmace "$HERE/$WP_RULE" "$WP_DIR/$WP_RULE"
 echo "HDMI sound turned off for PipeWire ($WP_DIR/$WP_RULE)."
 restart_wireplumber
 sleep 3
-sinks=$(runuser -u mtmace -- env XDG_RUNTIME_DIR=/run/user/$(id -u mtmace) wpctl status 2>/dev/null \
-        | sed -n '/Sinks:/,/Sources:/p' | head -n 8)
+sinks=$(runuser -u mtmace -- env XDG_RUNTIME_DIR=/run/user/$(id -u mtmace) timeout 5 wpctl status 2>/dev/null \
+        | sed -n '/Sinks:/,/Sources:/p' | head -n 8 || true)
 echo "$sinks"
-if echo "$sinks" | grep -q HDMI; then
+if [ -z "$sinks" ]; then      # wpctl didn't answer within 5 s (PipeWire still restarting)
+  echo "Sound check skipped (PipeWire didn't answer). Check later with: wpctl status"
+elif echo "$sinks" | grep -q HDMI; then
   echo "WARNING: HDMI sound outputs are still there - the rule did not take. Tell Claude."
 else
   echo "Sound check: no HDMI sound outputs left, only the DAC."
