@@ -15,7 +15,7 @@ A troubleshooting page that shows everything the jukebox is set to, in one place
 | Things to check | Plain-English warnings: Fruitbox not running or frozen, muted, paused, DAC missing, bass output not in use, lights switched off, a service stopped, music share not connected, Pi hot or short of power, USB drive full, screens asleep, no network |
 | Playing | Jukebox state (with a link to a page explaining each state), Song and artist, genre/playlist, songs in queue, attract mode, credits, songs in library |
 | Sound | Fruitbox volume (0 to MaxVolume) and mute, volume step and start volume from fruitbox.ini, bass now (dB) with its start level and range, DAC Digital level, the Pi's output volume, which sound output is in use |
-| Lights | On/off, brightness, theme, favourites 1/2/3, which look the lights show (from the jukebox state), idle, sleep and white levels; link to a Light themes page (what each theme shows in each state, read from the installed jukebox-lights.ini comments) |
+| Lights | On/off, brightness, theme, which look the lights show (from the jukebox state), idle, sleep and white levels; link to a Light themes page (what each theme shows in each state, read from the installed jukebox-lights.ini comments) |
 | Screens | Skin, each screen's size, position and rotation, screens on or asleep |
 | Network | Name, IP address, WiFi name and signal, page address |
 | Pi | Temperature, power/heat warnings (under-voltage), 5 V supply voltage, uptime, free space |

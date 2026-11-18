@@ -29,8 +29,9 @@ Where each value comes from
 Runs as mtmace (systemd service jukebox-status). Log: journalctl -u jukebox-status -f
 Test by hand:  python3 /usr/local/bin/jukebox-status.py --print
 """
-VERSION = "1.5"   # bump on every change; the status page shows it
+VERSION = "1.6"   # bump on every change; the status page shows it
 # 1.5: the cabinet lights service is now jukebox-lights (was jukebox-bridge).
+# 1.6: the Lights box no longer shows "Favourites 1/2/3" (those keys were removed).
 
 import configparser, html, json, os, re, shutil, socket, subprocess, sys, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -189,7 +190,6 @@ def lights():
     except configparser.Error:
         pass
     g = lambda sec, key: cfg.get(sec, key, fallback="")
-    d["favorites"] = g("themes", "favorites")
     d["theme_order"] = g("themes", "order")
     d["levels"] = {k: v for k, v in cfg.items("levels")} if cfg.has_section("levels") else {}
     d["white_level"] = g("leds", "white_level")
@@ -622,7 +622,6 @@ def summary_rows(s):
               "warn" if li["on"] is False else None),
             R("Brightness", f"{li['brightness']}%" if isinstance(li["brightness"], int) else str(li["brightness"] or "?")),
             R("Theme", li["theme"] or "?"),
-            R("Favourites 1/2/3", li["favorites"] or "-"),
             R("Lights showing", LIGHT_LOOK.get(read(JUKEBOX_MODE).strip(), li["fruitbox_state"])),
             R("Idle / sleep / white level", f"{li['levels'].get('idle', '?')}% / {li['levels'].get('sleep', '?')}% / "
                                             f"{li['white_level'] or '?'}%"),
