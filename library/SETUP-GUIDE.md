@@ -1,7 +1,7 @@
 # Jukebox music library: step-by-step setup
 
 About 30 minutes. You need the Windows PC that shares the music and the Pi, both on the
-same network. Do the Fruitbox setup (`../Fruitbox/fruitbox-setup/README.md`) first, or along with step 4.
+same network. Do the Fruitbox setup ([`../fruitbox/README.md`](../fruitbox/README.md)) first, or along with step 4.
 
 ---
 
@@ -34,13 +34,12 @@ whoami
 
 On the Windows PC, download the repo from GitHub (github.com/MTmace/Jukebox, green
 **Code** button, **Download ZIP**) and unzip it. Make a folder called `jukebox-setup` and copy
-in the repo's `Fruitbox\fruitbox-setup` folder (renamed to `fruitbox`) and its `library`
+in the repo's `fruitbox` folder and its `library`
 folder, so it looks like this:
 
 ```
-jukebox-setup\fruitbox\...   (README.md, fruitbox.ini, genre_library.py, genre_map.txt,
-                              install-autostart.sh, launch-fruitbox.sh)
-jukebox-setup\library\...    (jukebox_library.py, update-jukebox.sh, setup-share.sh, ...)
+jukebox-setup\fruitbox\...   (fruitbox.ini, install-autostart.sh, launch-fruitbox.sh, ...)
+jukebox-setup\library\...    (playlist_library.py, update-jukebox.sh, setup-share.sh, ...)
 ```
 
 Then copy the folder to the Pi from Command Prompt (Windows 10/11 has `scp` built in;
@@ -78,30 +77,26 @@ cron installed:
 
 If `ls /mnt/music` shows your music folders, the share works.
 
-## Step 6. Windows: mark the songs for the jukebox
+## Step 6. Windows: make the playlists
 
-Either or both:
-
-- **Stars**: in File Explorer, select songs > right-click > Properties > Details > Rating,
-  4 or 5 stars. (Or rate in Windows Media Player, MediaMonkey, MusicBee.)
-- **Tag**: put `Jukebox` in the **Grouping** field (Mp3tag or MusicBee can do many files at once).
-
-To change the rule (e.g. 5 stars only, or tag only), edit the `SELECT=` line at the top
-of `~/fruitbox/update-jukebox.sh` on the Pi.
+In PlexMediaToolkit's **Jukebox** page, make one playlist per category and save them in the
+share's `_Jukebox` folder. The number at the front of each name sets the order on the genre
+button, e.g. `01 Country.m3u8`, `02 Saturday Night.m3u8`. See [README.md](README.md).
 
 ## Step 7. Pi: preview, then build
 
 ```bash
-python3 ~/fruitbox/jukebox_library.py --dry-run --list --min-stars 4 --tag grouping=Jukebox | less
+python3 ~/fruitbox/playlist_library.py --dry-run
 ```
 
-The first run reads every file over the network, so a big library can take several
-minutes. Press `q` to leave the list. If the songs look right:
+This lists your playlists, their song counts and the lines it would write to fruitbox.ini,
+and changes nothing. The first run reads every song's tags over the network, so a big
+library can take several minutes. If it looks right:
 
 ```bash
 bash ~/fruitbox/update-jukebox.sh --always
 tail -n 30 ~/fruitbox/library.log
-ls ~/JukeboxLibrary ~/JukeboxGenres
+ls ~/JukeboxGroups
 ```
 
 ## Step 8. Pi: reboot and check Fruitbox
@@ -110,19 +105,14 @@ ls ~/JukeboxLibrary ~/JukeboxGenres
 sudo reboot
 ```
 
-Fruitbox should start with only your picked songs, and the genre button should step
-through the genres.
-
-- **Songs missing or Fruitbox shows nothing?** It may not follow symlinks. In
-  `~/fruitbox/update-jukebox.sh` change `MODE=symlink` to `MODE=copy`, then run
-  `bash ~/fruitbox/update-jukebox.sh --always` again. Copy mode stops if it would leave the
-  64 GB drive with under 8 GB free.
+Fruitbox should start with only your playlist songs, and the genre button should step
+through your playlists in order.
 
 ## After that
 
-Rate or tag songs on Windows whenever you like. The Pi picks up changes at 3:30 every
+Change the playlists on Windows whenever you like. The Pi picks up changes at 3:30 every
 night and 2 minutes after each boot. To update right away:
-`bash ~/fruitbox/update-jukebox.sh`, then reboot (or Quit Fruitbox with Esc and reboot).
+`bash ~/fruitbox/update-jukebox.sh`, then reboot.
 
 ## If something goes wrong
 
@@ -131,5 +121,5 @@ night and 2 minutes after each boot. To update right away:
 | `mount error(13): Permission denied` | Wrong Windows user or password. Re-run step 5. For a Microsoft account use the email address. |
 | `mount error(112)` or `Host is down` | Wrong PC address, PC asleep, or file sharing off (Settings > Network > Advanced sharing > turn on file sharing, Private network). |
 | `/mnt/music is not mounted` in the log | The PC was off at run time. Nothing changed; it retries next night. |
-| `would remove N of M songs, over the 50% limit` | Many songs became unrated or the share was half visible. Check, then run `python3 ~/fruitbox/jukebox_library.py --force` with your rule once. |
-| `0 picked` | Ratings aren't stored in the files (iTunes) or the tag field differs. Try `--tag comment~jukebox` or check a file in Mp3tag. |
+| `would remove N of M songs, over the 50% limit` | A playlist was emptied or the share was half visible. Check, then run `bash ~/fruitbox/update-jukebox.sh --force` once if the drop is real. |
+| no `_Jukebox` folder found | Save at least one playlist from PlexMediaToolkit's Jukebox page first. |

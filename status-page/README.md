@@ -15,13 +15,13 @@ A troubleshooting page that shows everything the jukebox is set to, in one place
 | Things to check | Plain-English warnings: Fruitbox not running or frozen, muted, paused, DAC missing, bass output not in use, lights switched off, a service stopped, music share not connected, Pi hot or short of power, USB drive full, screens asleep, no network |
 | Playing | Jukebox state (with a link to a page explaining each state), Song and artist, genre/playlist, songs in queue, attract mode, credits, songs in library |
 | Sound | Fruitbox volume (0 to MaxVolume) and mute, volume step and start volume from fruitbox.ini, bass now (dB) with its start level and range, DAC Digital level, the Pi's output volume, which sound output is in use |
-| Lights | On/off, brightness, theme, favourites 1/2/3, which look the lights show (from the jukebox state), idle, sleep and white levels; link to a Light themes page (what each theme shows in each state, read from the installed jukebox-bridge.ini comments) |
+| Lights | On/off, brightness, theme, which look the lights show (from the jukebox state), idle, sleep and white levels; link to a Light themes page (what each theme shows in each state, read from the installed jukebox-lights.ini comments) |
 | Screens | Skin, each screen's size, position and rotation, screens on or asleep |
 | Network | Name, IP address, WiFi name and signal, page address |
 | Pi | Temperature, power/heat warnings (under-voltage), 5 V supply voltage, uptime, free space |
-| Services | jukebox-bridge, jukebox-state, jukebox-status, jukebox-bass, Fruitbox: running, starts at boot, and the installed version (the script's VERSION line, file, install date, and an id matching `git hash-object` of the repo file); Fruitbox package version |
+| Services | jukebox-lights, jukebox-state, jukebox-status, jukebox-bass, Fruitbox: running, starts at boot, and the installed version (the script's VERSION line, file, install date, and an id matching `git hash-object` of the repo file); Fruitbox package version |
 | Music and devices | Music share, playlist folders, keypad Teensy, LED pins, USB devices |
-| Settings files | fruitbox.ini, jukebox-bridge.ini, config.txt, cmdline.txt (click to open) |
+| Settings files | fruitbox.ini, jukebox-lights.ini, config.txt, cmdline.txt (click to open) |
 | Recent log lines | launcher.log, fruitbox.log, and each service's log (click to open) |
 
 Volume, song, genre and skin only exist inside Fruitbox. The installer adds one hidden
@@ -74,7 +74,7 @@ After a change: `sudo systemctl restart jukebox-status`.
 | `jukebox_status.txt` | the skin folder (what Fruitbox writes out) |
 | `install-status.sh` | runs from `/home/mtmace/fruitbox/status-page/` |
 
-If the skin is rebuilt with `Fruitbox/Skins/build_skin.py`, the hidden box is already included.
+If the skin is rebuilt with `skin/build_skin.py`, the hidden box is already included.
 
 ## Normal ranges
 
@@ -108,5 +108,25 @@ The page has no copies of settings of its own. Volume figures come from
 fruitbox.ini; the bass start level and range from the `DEFAULT_DB`, `MIN_DB`,
 `MAX_DB` lines of the installed jukebox-bass.py; the times on the states page
 (`ACTIVE_SECONDS`, `SLEEP_MINUTES`, `CONFIRM_SECONDS`) from the installed
-jukebox-state.py; light levels and themes from jukebox-bridge.ini. Change the
+jukebox-state.py; light levels and themes from jukebox-lights.ini. Change the
 file, restart that service, and the page follows (a "?" means it couldn't read it).
+
+## Control page (1.4)
+
+http://jukebox.local/control (the "control" link at the top of the status page).
+The status page itself stays read-only; every action is on this separate page.
+Each section has dropdowns and a Go button.
+
+- **Jukebox state** (one dropdown): Wake up, Sleep, Attract on / off, Reboot, Rebuild playlists,
+  Shut down. These go to the state manager (needs jukebox-state 1.4), which does
+  exactly what the keys do. The buttons and which ones ask "are you sure?" come
+  from `WEB_REQUESTS` / `WEB_CONFIRM` in the installed jukebox-state.py.
+- **Services** (service dropdown + action dropdown): Start / Restart / Stop for every `jukebox-*.service` installed
+  (system ones in /etc/systemd/system, user ones in ~/.config/systemd/user).
+  Stop asks "are you sure?" first. The status page itself can only be restarted.
+
+No PIN: anyone on the home network can use it. Buttons send a form, so a link,
+a bookmark or a page refresh never presses one. The installer adds
+/etc/sudoers.d/jukebox-status so the page may start / stop / restart only the
+jukebox services installed at that time; run the installer again after adding a
+new service.

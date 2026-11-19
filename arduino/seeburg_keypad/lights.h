@@ -1,6 +1,6 @@
 // Selection number lights: a 5 V addressable LED strip (WS2812B) behind the
 // 20 selection numbers (1 2, then 0-7, then 0-9). Included by seeburg_keypad.ino; see
-// selection-lights/README.md for the parts, wiring and settings.
+// arduino/SELECTION-LIGHTS.md for the parts, wiring and settings.
 //
 // LIGHTS VERSION 11.2 (2026-11-09): fallback codes fixed to what Fruitbox really shows:
 // tens digit 0-7 = row, ones digit 0-8 = column (178/278 valid, 179/109 not).
@@ -40,7 +40,7 @@ const uint8_t  TENS_ROW[TENS_ROW_LEN] = { 0, 1, 2, 3, 4, 5, 6, 7 };   // row 1 (
 const uint8_t  ONES_ROW[10]     = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };   // row 2 (ones), left to right
 // ---- VALID SELECTIONS ----
 // The Pi sends the skin's real list each time Fruitbox starts
-// (Fruitbox/fruitbox-setup/send-song-codes.py) and the Teensy saves it, so
+// (fruitbox/send-song-codes.py) and the Teensy saves it, so
 // this list is only used until the first one arrives.
 // Each line is one block of codes, lowest to highest, both included. The lamp
 // panel limits them to hundreds 1-2, tens 0-7, ones 0-9 (100-179, 200-279);

@@ -9,8 +9,8 @@ pad itself.
 | Knob | Turn right | Turn left | Press | What catches it on the Pi |
 |---|---|---|---|---|
 | 1 Volume | `=` | `-` | Left Ctrl (mute) | Fruitbox itself (already set up) |
-| 2 Bass | F17 | F18 | F19 (back to flat) | `jukebox-bass.py` (this folder) |
-| 3 Lights | F14 | F15 | F13 (lights on/off) | `jukebox-bridge.py` (cabinet lights) |
+| 2 Bass | F17 | F18 | F19 (back to +10 dB) | `jukebox-bass.py` (this folder) |
+| 3 Lights | F14 | F15 | F13 (lights on/off) | `jukebox-lights.py` (cabinet lights) |
 
 None of these clash with Fruitbox's keys (F1-F12, letters, digits, arrows,
 Space, Backspace, Delete, Left/Right Alt, Left/Right Ctrl, `;` `'` `[` `]` `,`
@@ -42,8 +42,8 @@ sudo reboot
 
 What it does: adds a sound output called "Jukebox Bass" in front of the DAC
 and makes it the Pi's default, so Fruitbox plays through it. It boosts or cuts
-everything below about 100 Hz, 2 dB per click, from -12 to +12 dB. The level
-is saved and comes back after a reboot.
+everything below about 100 Hz, 2 dB per click, from -12 to +12 dB. It starts
+at +10 dB at every boot, and pressing the knob goes back to +10 dB.
 
 Test without the pad: `python3 /home/mtmace/fruitbox/jukebox-bass.py --set 8`
 (lots of bass), then `--set 0` (flat). Log: `journalctl --user -u jukebox-bass -f`.
@@ -57,16 +57,15 @@ Big bass boosts at a high Fruitbox volume can distort. At the normal volume
 
 ## 3. Lights
 
-Nothing new: the cabinet lights bridge (`cabinet-lights/jukebox-bridge.py`)
-already dims on F14/F15 and switches on/off with F13. It works once the bridge
+Nothing new: the cabinet lights service (`cabinet-lights/jukebox-lights.py`)
+already dims on F14/F15 and switches on/off with F13. It works once it
 is installed on the Pi (see `cabinet-lights/README.md`).
 
 ## 4. Reboot, Rebuild Playlist, Shut Down and Sleep keys
 
 Program the pad keys: Reboot = **F20**, Rebuild Playlist = **F21**, Shut Down = **F22**,
 Sleep = **Pause**. Each needs **two presses within 5 seconds**, so a bumped key does nothing.
-They are handled by the state manager (`state-manager/`, service jukebox-state), which
-replaced the old jukebox-keys service on 2026-11-14.
+They are handled by the state manager (`state-manager/`, service jukebox-state).
 
 | Key | Two presses do |
 |---|---|

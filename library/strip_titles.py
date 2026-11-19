@@ -19,9 +19,9 @@ The Publisher field holds the file's format and bit rate, e.g.
 "FLAC  ·  1,013 kbps", for the second screen's Now Playing. Fruitbox shows a
 file's own PUBLISHER tag there instead if it has one (rare; LABEL is ignored).
 
-Run it after genre_library.py, every time:
+Run it after playlist_library.py, every time:
 
-    python3 strip_titles.py /home/mtmace/JukeboxGenres
+    python3 strip_titles.py /home/mtmace/JukeboxGroups
 
 Fruitbox only rebuilds a fruitbox.db when the folder has changed since, so
 these files stay put. If Fruitbox ever rebuilds one itself, that folder's
@@ -143,7 +143,7 @@ def write_folder(folder, names):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("genres", help="genre library folder made by genre_library.py")
+    ap.add_argument("genres", help="category folder made by playlist_library.py (~/JukeboxGroups)")
     a = ap.parse_args()
     if not os.path.isdir(a.genres):
         sys.exit(f"not a folder: {a.genres}")

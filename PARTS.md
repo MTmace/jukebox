@@ -36,7 +36,7 @@ The case for the Teensy board is 3D printed.
 |---|---|---|---|---|
 | Raspberry Pi 5 | 1 | Have | Runs Fruitbox | |
 | 64 GB USB drive | 1 | Have | Pi's system and files, on the blue USB 3 port | |
-| 34" ultrawide monitor, flat, IPS | 1 | Deciding | Under the glass | See `hardware/cabinet-monitor-and-volume.md`. Flat, not curved. |
+| 34" ultrawide monitor, flat, IPS | 1 | Deciding | Under the glass | See `docs/monitor-and-volume.md`. Flat, not curved. |
 | Second screen for the status display | 1 | ? | Pi's 2nd HDMI port | |
 | InnoMaker HiFi DAC HAT (PCM5122) | 1 | ? | Sound out of the Pi | |
 | NAD 2-channel amplifier | 1 | ? | Drives the speakers | |
@@ -63,7 +63,7 @@ The case for the Teensy board is 3D printed.
 | 24 V DC power adapter | 1 | Need | Powers the keypad bulbs | Original bulbs are marked 28 V |
 | BA9S 24 V LED bulbs, non-polarity | 1 per bulb socket | Need | Replace the old bulbs | Count the sockets |
 
-## Selection number lights (`selection-lights/`)
+## Selection number lights (`arduino/SELECTION-LIGHTS.md`, `3dPrints/LampPanel/`)
 
 | Part | Qty | Status | Used for | Notes |
 |---|---|---|---|---|
@@ -81,7 +81,7 @@ The case for the Teensy board is 3D printed.
 | Inline blade fuse holder + 5 A fuse | 1 per strip | Need | In each strip's + wire | |
 | 330 ohm resistor and 1000 uF 10 V capacitor | 1 resistor, 1 capacitor per strip | Need | Pi data wire, power input of each strip | |
 
-## Glass button bar (`button-bar/`)
+## Glass button bar (`3dPrints/ButtonBar/`)
 
 | Part | Qty | Status | Used for | Notes |
 |---|---|---|---|---|

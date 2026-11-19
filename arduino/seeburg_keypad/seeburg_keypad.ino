@@ -15,11 +15,11 @@
     genre, ' for attract mode, Left/Right arrows for the two RESET keys
     (Left RESET = page left, Right RESET = page right).
   - Sends an "E:<event>" line over USB serial for every key, coin and button
-    ("E:key 4", "E:select 143", "E:reject 358", "E:coin 1", "E:genre", ...). jukebox-bridge.py
-    on the Pi (cabinet-lights/) turns these into WLED presets.
+    ("E:key 4", "E:select 143", "E:reject 358", "E:coin 1", "E:genre", ...). jukebox-lights.py
+    on the Pi (cabinet-lights/) uses these for the cabinet light flashes.
   - Volume is not handled here: the knob on the USB macro pad types Fruitbox's
     VolUp (=) / VolDown (-) keys directly. The stock Seeburg knob is not used.
-  - Lights the 23 selection numbers (lights.h, see selection-lights/README.md).
+  - Lights the 23 selection numbers (lights.h, see arduino/SELECTION-LIGHTS.md).
   - Screen sleep: when the Pi turns the screens off at night it sends "S"
     (screen-sleep.sh). The next keypad press then only wakes the screens
     (it types Shift, which Fruitbox ignores) and is not used as a digit.
@@ -63,7 +63,7 @@ const uint16_t KEY_TAP_MS         = 25;     // how long each key is held down
 const uint8_t  FILL_QUEUE_PRESSES = 20;
 const uint16_t FILL_QUEUE_GAP_MS  = 125;    // time between Random presses
 const bool     SERIAL_DEBUG       = false;  // also print events on the USB serial port
-                                            // (jukebox-bridge.py ignores lines without "V:" or "E:")
+                                            // (jukebox-lights.py ignores lines without "V:" or "E:")
 
 // ------------------------------------------------------------------- pins
 const uint8_t PIN_SOLENOID = 31;            // MOSFET gate for keyboard reset solenoid
@@ -179,7 +179,7 @@ void debug(const char *what, const char *detail) {
   Serial.println(detail);
 }
 
-// One line per event for jukebox-bridge.py on the Pi, e.g. "E:coin 1".
+// One line per event for jukebox-lights.py on the Pi, e.g. "E:coin 1".
 void event(const char *what, int n = -1) {
   Serial.print("E:");
   Serial.print(what);
@@ -312,7 +312,7 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(PIN_ENC_B), encoderIsr, CHANGE);
   }
 
-  Serial.begin(115200);     // event lines for jukebox-bridge.py (and debug output)
+  Serial.begin(115200);     // event lines for jukebox-lights.py (and debug output)
   lightsBegin();
 
   for (uint8_t i = 0; i < NUM_KEYS; i++) {

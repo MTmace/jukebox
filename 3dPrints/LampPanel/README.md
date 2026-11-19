@@ -47,14 +47,14 @@ height), `FIT` (extra gap), `HOUSING_D` (housing depth; the walls follow it), `H
 ## Step 2: the full panel (two halves)
 
 The hug test fits perfectly (2026-10-10), so the full panel uses the same clips,
-depth, hole size, 1.2 mm rings and 15.6 mm spacing. It has one row of 22 holes
-(1 2, then 0-9, then 0-9) on a 14.5" (368 mm) strip, split in two so each half
+depth, hole size, 1.2 mm rings and 15.6 mm spacing. It has one row of 20 holes
+(1 2, then 0-7, then 0-9; it was 22 until 2026-10-28, when the tens turned out to stop at 7) on a 14.5" (368 mm) strip, split in two so each half
 fits a Bambu P1S bed (256 mm):
 
 | File | Size | Holes |
 |---|---|---|
-| `lamp_panel_half1.stl` | 191 x 31 mm (includes the two dovetail tabs) | 1-11 |
-| `lamp_panel_half2.stl` | 184 x 31 mm (has the two dovetail slots) | 12-22 |
+| `lamp_panel_half1.stl` | 181 x 31 mm (includes the two dovetail tabs) | 1-10 |
+| `lamp_panel_half2.stl` | 171 x 31 mm (has the two dovetail slots) | 11-20 |
 
 Print both **back face down** (walls pointing up), no supports. Push half 1's
 two tabs down into half 2's slots so the plates sit flush, then snap the panel onto
@@ -79,3 +79,12 @@ with glue in the dovetails, and glue the bars on the back (CA glue or epoxy).
 Open the .scad file in OpenSCAD (free, openscad.org) to change sizes: set `part`
 to "half1", "half2", "splice", "jointtest" or "panel" (both halves together), press F6, then
 File > Export > STL.
+
+
+## Step 4: 13.5" long, stronger joint (2026-10-28)
+
+The 20 windows span 12.5", so the panel is now 13.5" (342.9 mm) long, leaving
+about 0.5" past the windows at each end (the holes are centred). The joint is
+stronger: dovetails 10 mm long with a 4.2 mm neck (were 7 and 3), and the splice
+bars are 70 x 3 mm (were 44 x 2). Reprint both halves, the splice bars and the
+joint test. `lamp_panel_half2_for_old_half1.stl` is gone: an old half 1 is too long now.

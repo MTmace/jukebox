@@ -1,4 +1,4 @@
-// Holder for 13 lever splice connectors (Adafruit 5619, inline 1-in/1-out)
+// Holder for 14 lever splice connectors (Adafruit 5619, inline 1-in/1-out)
 // clipped together side by side, for the keypad wires.
 // Measured block of 11: 95.5 wide x 39.4 long (wire direction); 13 = about 112.8
 // x 14.75 tall. Open top so the levers work; wires leave both long sides.
@@ -9,14 +9,14 @@
 //
 // part = "fittest"       : tray only 2 connectors wide   } print these two
 // part = "strap_fittest" : matching 2-connector strap     } first
-// part = "holder"        : the real tray for 13
-// part = "strap"         : the real strap for 13
+// part = "holder"        : the real tray for 14
+// part = "strap"         : the real strap for 14
 // part = "both"          : preview, strap in place
 // Print flat, no supports. The strap prints pegs up.
 
 part = "holder";
 
-count    = 13;
+count    = 14;            // 6 for the LED-strip holder (-D count=6)
 each_w   = 95.5 / 11;     // 8.68 mm per connector: 11 measured 95.5, fit test 2 perfect (13 = about 112.8)
 block_w  = count * each_w;
 block_l  = 39.4;          // along the wires
@@ -44,10 +44,19 @@ strap_t  = 3;
 screw_d  = 3.4;           // clearance hole in the strap
 ear_l    = 12;            // screw ears to fix the tray in the cabinet (#6 wood screws)
 ear_hole = 4.2;
+// mount = "ears": two ears with screw holes (normal)
+// mount = "wing": one long flat tab with an open-ended slot on the right end, so
+//                 it slides under an existing screw head (no ear on the left end)
+mount    = "ears";
+wing_l   = 25;            // how far the wing sticks out past the screw boss
+wing_w   = 16;
+wing_t   = 2.5;           // thin enough to slip under a screw head
+wing_slot = 4.4;          // open slot width (#6 / M3.5 screw shank, with room)
+wing_slot_l = 14;         // slot depth from the wing tip
 
 fit      = (part == "fittest" || part == "strap_fittest");
 n        = fit ? 2 : count;
-in_w     = n * each_w + (fit ? 0.15 : clear_w);
+in_w     = n * each_w + ((fit || n <= 2) ? 0.15 : clear_w);  // 2-wide: fit test 2 proved 0.15
 in_l     = block_l + clear_l;
 out_w    = in_w + 2*wall;
 out_l    = in_l + 2*wall;
@@ -67,7 +76,15 @@ module tray() {
         translate([0, y, 0]) cube([out_w, wall, floor_t + side_lip_h]);
       for (x = [-boss_t, out_w])                              // screw bosses
         translate([x, yc - boss_w/2, 0]) cube([boss_t, boss_w, wall_h]);
-      if (!fit)                                               // mounting ears
+      if (!fit && mount == "wing")                            // slide-under wing
+        translate([out_w + boss_t - 0.01, yc - wing_w/2, 0]) difference() {
+          cube([wing_l, wing_w, wing_t]);
+          translate([wing_l - wing_slot_l, wing_w/2, -1]) cylinder(d = wing_slot, h = wing_t + 2);
+          translate([wing_l - wing_slot_l, wing_w/2 - wing_slot/2, -1]) cube([wing_slot_l + 1, wing_slot, wing_t + 2]);
+          translate([wing_l, wing_w/2, -1]) linear_extrude(wing_t + 2)   // flared slot mouth
+            polygon([[0.01, -wing_slot/2 - 1.5], [0.01, wing_slot/2 + 1.5], [-1.5, wing_slot/2], [-1.5, -wing_slot/2]]);
+        }
+      if (!fit && mount == "ears")                            // mounting ears
         for (x = [-boss_t - ear_l, out_w + boss_t]) translate([x, yc - 8, 0])
           difference() {
             cube([ear_l, 16, 3]);
@@ -78,7 +95,7 @@ module tray() {
       translate([x, yc, floor_t + 1]) cylinder(d = pilot_d, h = wall_h);
     // floor window: saves plastic and lets you push the block out from below
     translate([wall + 6, wall + 8, -1]) cube([max(in_w - 12, 2), in_l - 16, floor_t + 2]);
-    if (!fit)
+    if (!fit && mount == "ears")
       for (x = [-boss_t - ear_l/2, out_w + boss_t + ear_l/2])
         translate([x, yc, 1.5]) cylinder(d1 = ear_hole, d2 = 8, h = 1.6);
   }

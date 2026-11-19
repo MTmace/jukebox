@@ -1,5 +1,5 @@
 // Selection number lamps: printed panel that holds the 12 mm bullet LEDs
-// (ALITOVE WS2811 bullets) behind the 22 numbers.
+// (ALITOVE WS2811 bullets) behind the 20 numbers (1 2, 0-7, 0-9).
 //
 // Print orientation is given for each part below (the hug parts and halves go back face down).
 //
@@ -118,7 +118,7 @@ module clip_panel(l, holes) {
       clip_wall(l, 1);                                    // bottom wall
       translate([0, h - WALL, 0]) clip_wall(l, -1);       // top wall (ridge points down)
     }
-    for (i = [0 : holes - 1])
+    for (i = [0 : (drill < 0 ? holes : drill) - 1])
       translate([l / 2 + (i - (holes - 1) / 2) * PITCH, h / 2, 0]) thin_hole(THIN);
   }
 }
@@ -146,7 +146,7 @@ module hug_wall(l, inside_dir) {
 }
 
 // Built back face down: z = 0 is the back, the walls point forward (+z).
-module hug_panel(l, holes) {
+module hug_panel(l, holes, drill = -1) {   // drill: only the first this many holes (-1 = all)
   h = INNER_H + FIT + 2 * WALL;
   difference() {
     union() {
@@ -154,7 +154,7 @@ module hug_panel(l, holes) {
       hug_wall(l, 1);
       translate([0, h - WALL, 0]) hug_wall(l, -1);
     }
-    for (i = [0 : holes - 1])
+    for (i = [0 : (drill < 0 ? holes : drill) - 1])
       translate([l / 2 + (i - (holes - 1) / 2) * PITCH, h / 2, 0]) {
         translate([0, 0, -1]) cylinder(d = HOLE, h = PLATE + 2);
         translate([0, 0, THIN]) cylinder(d = RING, h = PLATE);
@@ -163,21 +163,22 @@ module hug_panel(l, holes) {
 }
 
 // ---- Full panel (2026-10-10: the hug test fits perfectly) ----
-// One row of 22 holes (1 2, then 0-9, then 0-9) at the test's spacing, on a
+// One row of 20 holes (1 2, then 0-7, then 0-9; 2026-10-28: the tens only
+// go to 7) at the test's spacing, on a
 // 14.5" panel, split in two halves for a Bambu P1S (256 mm bed). The halves
 // join with two dovetails that press together through the plate; the housing
 // they clip onto keeps them in line. The ends are open, so the panel can
 // slide along the housing to line the holes up.
-FULL_HOLES = 22;
-FULL_L     = PANEL_L;          // 368.3 mm
-// Joint v2 (2026-10-10: v1 was loose even glued): tighter, longer
-// dovetails, plus two splice bars glued across the joint on the back.
-DOVE_NECK  = 3;                // dovetail width at the joint
-DOVE_HEAD  = 5.4;              // dovetail width at its end (band is 5.9 mm)
-DOVE_LEN   = 7;                // how far it reaches into the other half
+FULL_HOLES = 20;
+FULL_L     = 342.9;            // 13.5" (2026-10-28: windows span 12.5", 0.5" spare each end)
+// Joint v3 (2026-10-28: "make the dove tails stronger"): wider neck,
+// longer tails, longer and thicker splice bars. (v2: neck 3, len 7, splice 44 x 2.)
+DOVE_NECK  = 4.2;               // dovetail width at the joint
+DOVE_HEAD  = 5.6;              // dovetail width at its end (band is 5.9 mm)
+DOVE_LEN   = 10;               // how far it reaches into the other half
 DOVE_GAP   = 0.05;             // clearance each side: a firm press fit (was 0.15)
-SPLICE_L   = 44;               // splice bar length, centred on the joint
-SPLICE_T   = 2.0;              // splice bar thickness (sticks out the back)
+SPLICE_L   = 70;               // splice bar length, centred on the joint
+SPLICE_T   = 3.0;              // splice bar thickness (sticks out the back)
 SPLICE_IN  = 8.3;              // splice bar inner edge, from the hole centre line
                                // (clear of each bulb's 12 mm body plus room for its clips)
 
@@ -185,7 +186,20 @@ function full_h() = INNER_H + FIT + 2 * WALL;
 
 module full_whole() { hug_panel(FULL_L, FULL_HOLES); }
 
-// The joint sits midway between hole 11 and hole 12. Dovetails go in the solid
+// "half2_old": a half 2 that goes with a half 1 printed from the old 22-hole
+// layout (holes 1 2, 0-8). That half 1's last hole becomes the ones' 0, so this
+// half 2 has the 22-hole spacing with only the ones' 1-9 (9 holes; the last two
+// spots are left solid). Holes sit 7.8 mm off-centre overall; slide the panel
+// along the housing to line them up.
+module half2_old() {
+  h = full_h();
+  difference() {
+    intersection() { hug_panel(FULL_L, 22, 20); translate([FULL_L / 2, -1, -1]) cube([FULL_L / 2 + 1, h + 2, 50]); }
+    dovetails(DOVE_GAP);
+  }
+}
+
+// The joint sits midway between hole 10 and hole 11. Dovetails go in the solid
 // bands above and below the holes, clear of the thinned rings.
 module dovetails(grow = 0) {
   h = full_h();
@@ -227,6 +241,7 @@ else if (part == "hug") hug_panel(CLIP_HOLES * PITCH + 6, CLIP_HOLES);
 else if (part == "clip") clip_panel(CLIP_HOLES * PITCH + 6, CLIP_HOLES);
 else if (part == "half1") half(1);
 else if (part == "half2") translate([-FULL_L / 2, 0, 0]) half(2);
+else if (part == "half2_old") translate([-FULL_L / 2, 0, 0]) half2_old();
 else if (part == "splice") { splice(); translate([0, splice_w() + 4, 0]) splice(); }   // print 1 set
 else if (part == "jointtest") {   // 50 mm of each side of the joint, to check the fit quickly
   translate([-FULL_L / 2 + 25, 0, 0]) intersection() {

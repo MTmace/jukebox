@@ -132,7 +132,7 @@ Each switch goes between its pin and **GND**.
 | 39 | Skip button (optional) | Backspace | Skip |
 | 40 | Mute button (optional) | Left Ctrl | Mute |
 | 41 | Cancel button (optional) | none | Restarts the 3-digit count, clears the lights and fires the reset solenoid. A half-typed code in Fruitbox clears itself after its `SelectTimeout`. |
-| 17 | Selection lights data (through 330 ohm) | | see `selection-lights/README.md` |
+| 17 | Selection lights data (through 330 ohm) | | see `SELECTION-LIGHTS.md` |
 | 31 | MOSFET gate for reset solenoid (optional) | output | |
 | 15, 16 | Volume encoder A, B (only if `USE_ENCODER = true`) | `=` / `-` | VolUp / VolDown |
 | 13, 14, 18 to 23, 32 | Spare (13 also lights the Teensy's orange LED) | | |
@@ -162,7 +162,7 @@ coil from a supply that matches its rating, or block it open mechanically.
 | DIN (data) | 330 ohm resistor, then Teensy pin **17** |
 
 Put a 1000 uF capacitor across 5 V and GND at the strip's input (stripe side to
-GND). Details and settings: [`selection-lights/README.md`](../selection-lights/README.md).
+GND). Details and settings: [`SELECTION-LIGHTS.md`](SELECTION-LIGHTS.md).
 
 ## 6. Keyboard reset solenoid (optional)
 
@@ -194,11 +194,11 @@ half-entered selection, when the Cancel button is pressed, and once at power-up.
 The stock Seeburg volume knob is **not used**. Volume comes from the knob on the
 Koolertron macro pad in the glass button bar, which plugs straight into the Pi
 and types Fruitbox's `VolUp` (`=`) and `VolDown` (`-`) keys
-(`hardware/cabinet-monitor-and-volume.md`). Nothing for volume connects to the
+(`docs/monitor-and-volume.md`). Nothing for volume connects to the
 Teensy.
 
 The Teensy still sends an `E:` line over its USB cable for every key, coin and
-button; `cabinet-lights/jukebox-bridge.py` on the Pi uses those for the cabinet
+button; `cabinet-lights/jukebox-lights.py` on the Pi uses those for the cabinet
 lights.
 
 **Encoder (off by default, spare option).** If you would rather have a rotary encoder that

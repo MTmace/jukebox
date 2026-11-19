@@ -1,185 +1,100 @@
-# Jukebox music library: how it works
+# Jukebox music library
 
-> **Since November 2026 the jukebox uses playlists made in PlexMediaToolkit instead of ratings and genres.** See [PLAYLISTS.md](PLAYLISTS.md). The rating and genre steps below describe the old way (kept for reference).
+The jukebox's songs and categories come from **playlists** made on Windows in
+PlexMediaToolkit's **Jukebox** page. Your music stays on the Windows PC; the Pi never copies
+it. It builds folders of **symlinks** (the Linux version of Windows shortcuts) that point at
+the songs in each playlist, and Fruitbox plays from those folders. Each playlist becomes one
+category on the genre button (Right Alt).
 
-Your music stays on the Windows media server. The Pi never copies it. Instead the Pi
-builds folders of **symlinks** (the Linux version of Windows shortcuts) that point at
-just the songs you picked, sorted into genres. Fruitbox plays from those folders.
+First-time setup: [SETUP-GUIDE.md](SETUP-GUIDE.md).
 
-Everything here runs on the **Pi**, except the one PowerShell script, which runs on Windows.
-
-## Where things live
-
-| On the Pi | Windows equivalent | What it is |
-|---|---|---|
-| `/mnt/music` | a mapped drive, like `M:` | Your Windows share `\\192.168.1.20\MusicFiles`, read-only |
-| `/home/mtmace/fruitbox` | `C:\Users\mtmace\fruitbox` | All the jukebox scripts and settings |
-| `/home/mtmace/JukeboxLibrary` | a folder of shortcuts | Shortcuts to the songs you picked, same folders as on the share |
-| `/home/mtmace/JukeboxGenres` | a folder of shortcuts | Same songs, one folder per genre. **Fruitbox plays from here** |
-| `/opt/fruitbox` | `C:\Program Files\fruitbox` | The Fruitbox program and skins. Left as installed |
-
-`~` in Linux means your home folder, so `~/fruitbox` is the same as `/home/mtmace/fruitbox`.
-
-## The process, step by step
+## How it works
 
 ```
-Windows: \\192.168.1.20\MusicFiles   (you rate and tag songs here)
-        │
-        │  mounted read-only on the Pi at /mnt/music
+Windows: PlexMediaToolkit, Jukebox page
+        │  saves one file per category:
         ▼
-1. jukebox_library.py   picks songs rated 4+ stars OR with Grouping = Jukebox,
-        │               skips duplicate copies (live / greatest hits)
+\\YOUR-PC\...\MusicFiles\_Jukebox\01 Country.m3u8, 02 Saturday Night.m3u8, ...
+        │  the same folder on the Pi: /mnt/music/_Jukebox (share mounted read-only)
         ▼
-   /home/mtmace/JukeboxLibrary
-        │
-2. genre_library.py     sorts each song into one genre using genre_map.txt,
-        │               and writes the genre list into fruitbox.ini
+playlist_library.py   (nightly at 3:30 and 2 minutes after each boot, run by update-jukebox.sh)
+        │  links each song once, writes the category list into fruitbox.ini
         ▼
-   /home/mtmace/JukeboxGenres/Country, /Rock, /Soul, ...
+/home/mtmace/JukeboxGroups/01, 01+02, 02, ...   ← Fruitbox plays from here
         │
-3. Fruitbox             reads fruitbox.ini; the genre button (Right Alt) steps through the folders
+strip_titles.py       writes the short titles for the skin's title strips
 ```
 
-**When it runs:** steps 1 and 2 run automatically every night at 3:30 am and 2 minutes after
-every boot (a cron job, the Linux version of Task Scheduler). Fruitbox reads the folders when
-it starts, so changes show after the next reboot.
+- **Order:** the number at the front of the file name is the order on the genre button.
+  "All Songs" is kept and lists every song once.
+- **A song in two playlists** is linked once into a folder that belongs to both categories
+  (for example `01+02` = Country and Saturday Night). That's how All Songs avoids showing it twice.
+- **Christmas and Holiday songs** (genre tag containing either word) stay in their own playlists
+  but are left out of All Songs. The script makes All Songs itself (folders ending in `x`, e.g.
+  `05x`, hold the songs left out), and Fruitbox's built-in one is off
+  (`MusicGroupIncludeAllSongs = No`).
+- **Duplicates:** the same song (same artist and title) from different albums is kept once:
+  studio album, else single, else greatest hits, else live. Skipped ones are listed in
+  `/home/mtmace/fruitbox/playlist-duplicates.txt`.
+- **Work lists:** a playlist whose file name starts with `_` (like `_Ideas.m3u8`) is skipped.
+- **Song order on screen:** artist, then album, then track number (skin setting `SortSongsBy`).
+- Songs a playlist lists but the share doesn't have are written to
+  `/home/mtmace/fruitbox/playlist-missing.txt`. Fix them with **Find match** on the Jukebox page.
 
 ## The files
 
-### On the Pi, in /home/mtmace/fruitbox
+All of these go in `/home/mtmace/fruitbox` on the Pi (like `C:\Users\mtmace\fruitbox`).
 
-> **Always start scripts with `bash` (or `python3` for .py files).** A file downloaded through Chromium loses its "can run" setting, so typing just its path gives "Permission denied". `bash /path/to/script.sh` runs it anyway. To make the scripts runnable on their own again (the nightly job needs this), type once: `chmod +x /home/mtmace/fruitbox/*.sh`
+| File | What it does |
+|---|---|
+| `update-jukebox.sh` | The one you run by hand, and the one the nightly job runs. Runs `playlist_library.py`, then `strip_titles.py` if anything changed. Log: `library.log` |
+| `playlist_library.py` | Reads the playlists and builds `~/JukeboxGroups` and the ini's MusicPath lines |
+| `music_tags.py` | Tag reading and duplicate rules that `playlist_library.py` uses. Tags are cached in `/home/mtmace/.cache/playlist_tags.json`, so only new or changed files are read over the network |
+| `strip_titles.py` | Writes Fruitbox's song list with shortened titles for the title strips |
+| `setup-share.sh` | One-time setup: mounts the share, installs these files, adds the nightly job |
 
-**update-jukebox.sh** is the one you run by hand, and the one the nightly job runs. It runs
-step 1, then step 2 only if songs were added or removed.
-- Your selection rule is the `SELECT=` line at the top. Examples are in the file.
-- Run it: `bash /home/mtmace/fruitbox/update-jukebox.sh`
-- Force the genre rebuild even when no songs changed (needed after editing genre_map.txt):
-  `bash /home/mtmace/fruitbox/update-jukebox.sh --always`
-- Its log is `/home/mtmace/fruitbox/library.log`
-
-**jukebox_library.py** does step 1. You normally don't run it directly. It reads the rating
-inside each file (`FMPS_RATING`, which your library manager writes; 0.8 = 4 stars), not
-Plex's database. It remembers tags in `/home/mtmace/.cache/jukebox_library.json`, so only
-new or changed files are read over the network. The first run on ~11,000 songs takes 20+ minutes.
-To preview what it would pick without changing anything:
-`python3 /home/mtmace/fruitbox/jukebox_library.py --dry-run --list --min-stars 4 --tag grouping=Jukebox`
-
-**duplicates.txt** is written by step 1. When the same song (same artist and title) is on
-several albums, only one copy goes on the jukebox: studio album first, then single, then
-greatest hits or compilation, then live. Each line shows what was skipped and what was kept.
-To turn this off, add `--keep-duplicates` to the `SELECT=` line.
-
-**genre_library.py** does step 2. A song can carry several genres; it goes in the group
-listed first in genre_map.txt. Where a song goes:
-
-1. Its genre is on a line in genre_map.txt: that line's group.
-2. Its genre contains a group name as a word ("Country Pop" goes to Country, "Neo Soul"
-   to R&B because Soul is on the R&B line): that group.
-3. Its genre matches nothing: it keeps its own name. With 10 or more such songs it gets
-   its own group on the genre button; with fewer, those songs go to "Other".
-4. No genre tag at all: "Other".
-5. Tagged with a genre on the `Exclude =` line (Christmas, Holiday): left off the
-   jukebox completely.
-
-Every song except excluded ones is also in "All Songs".
-
-**genre_map.txt** is the file you edit to control genres. Each line is
-`Group Name = genre, genre, ...`. The order of lines is both the priority (Country first,
-so "Pop; Country" goes to Country) and the order the genre button cycles through. To merge
-small genres, add them to an existing line. Your music files are never changed.
-
-**fruitbox.ini** holds Fruitbox's settings for this jukebox (buttons, credits, attract mode).
-Step 2 rewrites its `MusicPath` lines, one per genre folder, so don't edit those lines by hand.
-
-**launch-fruitbox.sh** starts Fruitbox with this fruitbox.ini and restarts it if it crashes.
-It runs automatically at login. Typing `fruitbox` in a terminal runs it too, because of the
-alias line added to `/home/mtmace/.bashrc`.
-
-**setup-share.sh** is one-time setup, already done: mounts the share, stores the Windows
-password in `/etc/jukebox-share.cred`, copies the scripts here, and adds the nightly job.
-Run it again only if the server's address, share name or password changes, from the
-`library` folder of the unzipped jukebox-setup:
-`bash setup-share.sh //192.168.1.20/MusicFiles mtmace`
-
-### On Windows
-
-**Check-FlacRatings.ps1** reads the ratings inside your FLAC files and shows how many songs
-the Pi would pick, so you can check the Pi's numbers. It changes nothing.
-```
-powershell -ExecutionPolicy Bypass -File .\Check-FlacRatings.ps1 -Path "D:\Music"
-```
-Add `-Csv "$HOME\Desktop\ratings.csv"` to also save a per-song list.
-
-### Guides
-
-**SETUP-GUIDE.md** is the first-time setup walkthrough. This README is for day-to-day use.
+> **Start scripts with `bash` (or `python3` for .py files).** A file downloaded through
+> Chromium loses its "can run" setting. To make them runnable on their own again (the nightly
+> job needs this), type once: `chmod +x /home/mtmace/fruitbox/*.sh /home/mtmace/fruitbox/*.py`
 
 ## Quick commands
 
-Type these in a terminal on the Pi (the black-box icon on the desktop, like Command Prompt).
-
-**Fruitbox**
 ```
-fruitbox                     # start Fruitbox (from a terminal on the jukebox screen)
+bash /home/mtmace/fruitbox/update-jukebox.sh            # update now (then reboot)
+bash /home/mtmace/fruitbox/update-jukebox.sh --always   # same, and always rewrite the strip titles
+bash /home/mtmace/fruitbox/update-jukebox.sh --force    # allow a run that removes over half the songs
+python3 /home/mtmace/fruitbox/playlist_library.py --dry-run   # preview, changes nothing
+tail -n 30 /home/mtmace/fruitbox/library.log            # what the last update did
+ls /mnt/music                                           # is the Windows share connected?
+crontab -l                                              # the automatic schedule
 ```
-- Quit: press **Esc** on the keyboard. Fruitbox closes to the desktop and stays closed.
-- Fruitbox starts by itself after every reboot, so normally you don't need to start it.
-- Its log: `tail -n 30 /home/mtmace/fruitbox/fruitbox.log`
 
-**Fruitbox's song database**
+Fruitbox reads the folders when it starts, so changes show after the next reboot.
 
-Fruitbox keeps a small `fruitbox.db` file in each genre folder and refreshes it on its own at
-start-up when songs are added or removed. To force a full refresh (for example after fixing
-tags on songs that are already on the jukebox), delete those files and restart:
+**Fruitbox's song database:** Fruitbox keeps a `fruitbox.db` in each folder and refreshes it
+by itself when songs are added or removed. To force a full refresh (after fixing tags on
+songs already on the jukebox):
 ```
-find /home/mtmace/JukeboxGenres -name fruitbox.db -delete
+find /home/mtmace/JukeboxGroups -name fruitbox.db -delete
 sudo reboot
-```
-The first start after this takes longer while Fruitbox reads every song again.
-
-**Music library**
-```
-bash /home/mtmace/fruitbox/update-jukebox.sh            # update the song picks now (then reboot)
-bash /home/mtmace/fruitbox/update-jukebox.sh --always   # same, and always rebuild the genres
-tail -n 30 /home/mtmace/fruitbox/library.log       # what the last update did
-ls /mnt/music                                      # is the Windows share connected?
-crontab -l                                         # show the automatic schedule
-```
-
-**The Pi**
-```
-sudo reboot                  # restart (like Windows Restart)
-sudo shutdown now            # turn off safely before cutting power
 ```
 
 ## Common tasks
 
 | I want to... | Do this |
 |---|---|
-| Add or remove a song | Change its rating or Grouping tag on Windows. Picked up at 3:30 am, or run `bash /home/mtmace/fruitbox/update-jukebox.sh`, then reboot |
-| Change which songs qualify | Edit `SELECT=` in `/home/mtmace/fruitbox/update-jukebox.sh` |
-| Fix a slow third digit after the jukebox sits idle | Windows drops an idle share after 15 minutes, so the first song picked waits while the Pi reconnects. Keep it awake: `(crontab -l; echo "*/4 * * * * ls /mnt/music >/dev/null 2>&1") \| crontab -` (new installs of `setup-share.sh` already do this). On the PC, set Power Options > "Turn off hard disk after" to Never |
-| Change or merge genres | Edit `/home/mtmace/fruitbox/genre_map.txt`, run `bash /home/mtmace/fruitbox/update-jukebox.sh --always`, reboot |
-| Leave a genre off the jukebox | Add it to the `Exclude =` line at the bottom of `/home/mtmace/fruitbox/genre_map.txt` (Christmas and Holiday are there now), run `bash /home/mtmace/fruitbox/update-jukebox.sh --always`, reboot |
+| Add or remove a song | Change the playlist in PlexMediaToolkit. Picked up at 3:30 am, or run `update-jukebox.sh`, then reboot |
+| Add a category | Save a new numbered playlist (e.g. `06 Motown.m3u8`) in the `_Jukebox` folder, then update and reboot |
+| Fix a slow third digit after the jukebox sits idle | Windows drops an idle share after 15 minutes. `setup-share.sh` adds a job that lists the share every 4 minutes to keep it awake. On the PC, set Power Options > "Turn off hard disk after" to Never |
 | See what happened last night | `tail -n 30 /home/mtmace/fruitbox/library.log` |
-| See which duplicates were skipped | `less /home/mtmace/fruitbox/duplicates.txt` (q to quit) |
-| See the genre folders | `ls /home/mtmace/JukeboxGenres` |
-| Count the picked songs | `find /home/mtmace/JukeboxLibrary -type l -name '*.flac' \| wc -l` |
+| See the category folders | `ls /home/mtmace/JukeboxGroups` |
 
 To edit a file on the Pi: `nano <path>`, then Ctrl+O and Enter to save, Ctrl+X to exit.
-Type commands by hand; pasting into the Pi terminal sometimes adds stray characters like `^[[200~`.
 
 ## Safety
 
 - The share is mounted read-only. Nothing on the Windows PC is ever changed.
-- If the server is off or the share isn't mounted, the run stops and the jukebox keeps the
-  songs it had.
-- A run that would remove more than half the songs stops too, in case the share came up
-  half-empty. Override once with `--force` if the drop is real.
-
-## Symlinks
-
-Confirmed on the Pi (October 2026): Fruitbox loads and plays songs through the symlinks, so
-nothing is copied to the Pi's 64 GB drive. `MODE=copy` in `update-jukebox.sh` still exists
-but isn't needed.
+- If the share isn't mounted, there are no playlists, or more than half the songs would
+  disappear since the last run, nothing changes and the log says why.
+- `MODE=copy` in `update-jukebox.sh` still exists but isn't needed: Fruitbox plays through
+  the symlinks (confirmed October 2026).

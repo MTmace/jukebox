@@ -10,28 +10,31 @@ the jukebox. Audio goes from an InnoMaker HiFi DAC HAT to a bridged Blaupunkt ca
 
 ## What's in each folder
 
+**Runs on the Pi**
+
 | Folder | What it is | Where it goes on the Pi |
 |---|---|---|
-| `Fruitbox/fruitbox-setup/` | Fruitbox settings (`fruitbox.ini`), the launcher, autostart setup, the genre-folder script and genre map | `/home/mtmace/fruitbox/` |
-| `Fruitbox/Skins/` | The "Firestar Ultrawide" skin. `Firestar Ultrawide/` is the skin itself; `build_skin.py` and `status_screen.py` generate it | `Firestar Ultrawide/` goes to `/opt/fruitbox/skins/Firestar Ultrawide/` |
-| `library/` | Music library scripts: mount the Windows share, pick the songs, build the genre folders, short strip titles, the nightly update. Start with `SETUP-GUIDE.md` | `/home/mtmace/fruitbox/` |
-| `FlacRatings/` | `check-flacRatings.ps1` and its report, for checking star ratings on Windows | Runs on Windows, not the Pi |
-| `arduino/` | Teensy 4.1 program for the Seeburg keypad, coins, buttons and selection lights, plus wiring notes and a beginner guide | Uploaded to the Teensy from the Arduino IDE |
-| `hardware/` | Monitor mounting and volume notes | |
-| `cabinet-lights/` | LED strips around the cabinet that follow what the jukebox is doing, driven straight from a Pi pin by the jukebox bridge | `jukebox-bridge.py` to `/usr/local/bin/`, `jukebox-bridge.ini` to `/home/mtmace/fruitbox/` |
-| `button-bar/` | 3D-printable glass button bar and its optional circuit board | Printed or ordered, not on the Pi |
-| `selection-lights/` | Addressable LEDs behind the 23 selection numbers: behaviour, parts, wiring and settings | Part of the Teensy program |
-| `state-manager/` | One service that decides if the jukebox is starting, active, idle, in attract mode or asleep; handles the Sleep, Reboot, Rebuild Playlist and Shut Down keys | `/usr/local/bin/` and a systemd service |
-| `status-page/` | The status web page (http://jukebox.local) and the on-screen status overlay | `/home/mtmace/fruitbox/status-page/` |
-| `macro-pad/` | The Koolertron macro pad: key and knob settings, and the bass knob service | `/home/mtmace/fruitbox/` |
-| `3dPrints/` | 3D-printable parts: keycaps, Pi and Teensy cases, power inlet plate, status screen frame and more | Printed, not on the Pi |
-| `PARTS.md` | Every part for the build and whether it is bought yet | Not on the Pi |
+| `fruitbox/` | Fruitbox settings (`fruitbox.ini`), the launcher, screen and autostart setup | `/home/mtmace/fruitbox/` |
+| `skin/` | The "Firestar Ultrawide" skin. `Firestar Ultrawide/` is the skin itself; `build_skin.py` and `status_screen.py` generate it | `Firestar Ultrawide/` goes to `/opt/fruitbox/skins/Firestar Ultrawide/` |
+| `library/` | Music library: mount the Windows share, turn the playlists into categories, short strip titles, the nightly update. Start with `SETUP-GUIDE.md` | `/home/mtmace/fruitbox/` |
+| `state-manager/` | Service `jukebox-state`: decides if the jukebox is starting, active, idle, in attract mode or asleep; handles the Sleep, Reboot, Rebuild Playlist and Shut Down keys | `/usr/local/bin/` and a systemd service |
+| `cabinet-lights/` | Service `jukebox-lights`: the LED strips around the cabinet, driven straight from a Pi pin, following the jukebox's state | `/usr/local/bin/`, settings in `/home/mtmace/fruitbox/` |
+| `status-page/` | Service `jukebox-status`: the status and control web page (http://jukebox.local) and the F24 on-screen status box | `/usr/local/bin/` and a systemd service |
+| `macro-pad/` | The Koolertron macro pad's key and knob settings, and service `jukebox-bass` (the bass knob) | `/home/mtmace/fruitbox/` and a user service |
 
-Some files are in two folders. Keep both copies the same when you change one:
+**Runs on the Teensy**
 
-- `genre_library.py` and `genre_map.txt`: `Fruitbox/fruitbox-setup/` and `library/`
-- `strip_titles.py`: `Fruitbox/Skins/` and `library/`
-- The ratings checker: `FlacRatings/check-flacRatings.ps1` and `library/Check-FlacRatings.ps1`
+| Folder | What it is |
+|---|---|
+| `arduino/` | Teensy 4.1 program for the Seeburg keypad, coins, buttons and the selection number lights, plus wiring notes and a beginner guide. Uploaded from the Arduino IDE |
+
+**Everything else**
+
+| Folder | What it is |
+|---|---|
+| `3dPrints/` | Every 3D-printed part: keycaps, Pi and Teensy cases, lamp panel, button bar, splice holders, WAGO boxes, power inlet plate, status screen frame and more. Each folder has a README |
+| `docs/` | Build notes: monitor mounting and volume |
+| `PARTS.md` | Every part for the build and whether it is bought yet |
 
 ## Notes
 

@@ -25,6 +25,7 @@ fi
 if [ "${1:-}" = off ]; then
   systemctl disable --now jukebox-status 2>/dev/null || true
   rm -f /etc/systemd/system/jukebox-status.service /usr/local/bin/jukebox-status.py /usr/local/bin/jukebox-status-overlay.py
+  rm -f /etc/sudoers.d/jukebox-status
   systemctl daemon-reload
   echo "Removed the status page. (The skin's hidden status box is harmless and stays;"
   echo "to undo it too, copy fruitbox.cfg.before-status back over fruitbox.cfg in the skin folder.)"
@@ -59,7 +60,33 @@ for cfg in "$SKINS"/*/fruitbox.cfg; do
 done
 [ "$patched" -gt 0 ] || echo "WARNING: no jukebox skin found in $SKINS - volume, song and genre will show '?'."
 
-# 2. The status service
+# 2. Control page: let the page (runs as mtmace) start / stop / restart our own
+#    system services, and nothing else. One line per jukebox-*.service installed
+#    now; run this installer again after adding a new service.
+SUDO_FILE=/etc/sudoers.d/jukebox-status
+units=""
+for f in /etc/systemd/system/jukebox-*.service; do
+  [ -f "$f" ] || continue
+  u="$(basename "$f" .service)"
+  units="$units $u"
+done
+units="$units jukebox-status"
+{
+  echo "# Status page Control page (status-page/install-status.sh). Made by the installer."
+  for u in $(echo $units | tr ' ' '\n' | sort -u); do
+    echo "mtmace ALL=(root) NOPASSWD: /usr/bin/systemctl start $u, /usr/bin/systemctl stop $u, /usr/bin/systemctl restart $u, /usr/bin/systemctl --no-block restart $u"
+  done
+} > "$SUDO_FILE.new"
+chmod 440 "$SUDO_FILE.new"
+if visudo -cf "$SUDO_FILE.new" >/dev/null; then
+  mv "$SUDO_FILE.new" "$SUDO_FILE"
+  echo "Control page may start / stop / restart:$(echo $units | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+else
+  rm -f "$SUDO_FILE.new"
+  echo "WARNING: couldn't set the control page's permission; its service buttons will say 'failed'."
+fi
+
+# 3. The status service
 install -m 755 "$HERE/jukebox-status.py" /usr/local/bin/jukebox-status.py
 install -m 755 "$HERE/jukebox-status-overlay.py" /usr/local/bin/jukebox-status-overlay.py
 install -m 644 "$HERE/jukebox-status.service" /etc/systemd/system/jukebox-status.service
